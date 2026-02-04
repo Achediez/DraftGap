@@ -1,0 +1,6 @@
+@DraftGapBackend.Api_HostAddress = http://localhost:5057
+
+GET {{DraftGapBackend.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
