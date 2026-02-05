@@ -12,6 +12,7 @@
 using DraftGapBackend.Infrastructure;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using System.Diagnostics; // Para abrir el navegador automáticamente
 
 // Crea el builder para configurar la aplicación web
 var builder = WebApplication.CreateBuilder(args);
@@ -38,6 +39,14 @@ if (app.Environment.IsDevelopment())
     // Habilita Swagger y su UI solo en desarrollo
     app.UseSwagger();
     app.UseSwaggerUI();
+
+    // Abre automáticamente Swagger UI en el navegador predeterminado (puerto por defecto 5001)
+    var swaggerUrl = "https://localhost:5001/swagger";
+    try
+    {
+        Process.Start(new ProcessStartInfo { FileName = swaggerUrl, UseShellExecute = true });
+    }
+    catch { /* Ignorar errores si no se puede abrir el navegador */ }
 }
 
 // Redirección HTTPS obligatoria
