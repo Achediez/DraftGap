@@ -40,8 +40,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 
-    // Abre automáticamente Swagger UI en el navegador predeterminado (puerto por defecto 5001)
-    var swaggerUrl = "https://localhost:5001/swagger";
+    // Detecta la URL real de Swagger y la abre en el navegador predeterminado
+    var serverAddresses = app.Urls.Count > 0 ? app.Urls : builder.WebHost.GetSetting("urls")?.Split(';') ?? new string[] { "https://localhost:5001" };
+    var swaggerUrl = serverAddresses.First().TrimEnd('/') + "/swagger";
     try
     {
         Process.Start(new ProcessStartInfo { FileName = swaggerUrl, UseShellExecute = true });
