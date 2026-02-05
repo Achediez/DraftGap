@@ -1,5 +1,6 @@
 // Interfaces de repositorios y servicios de dominio
 using DraftGapBackend.Domain.Users;
+using System.Threading.Tasks;
 
 namespace DraftGapBackend.Domain.Abstractions
 {

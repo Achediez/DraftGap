@@ -1,3 +1,6 @@
+using System;
+using System.Threading.Tasks;
+
 // Proyecto de dominio: entidades y lógica de negocio
 namespace DraftGapBackend.Domain.Users
 {

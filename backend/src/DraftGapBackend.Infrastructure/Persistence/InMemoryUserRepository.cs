@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 // Implementación de repositorio de usuarios (ejemplo con memoria, reemplazar por EF u otro más adelante)
 using DraftGapBackend.Domain.Abstractions;
 using DraftGapBackend.Domain.Users;

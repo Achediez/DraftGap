@@ -1,5 +1,6 @@
 // Casos de uso y lógica de aplicación
 using DraftGapBackend.Domain.Users;
+using System.Threading.Tasks;
 
 namespace DraftGapBackend.Application.Users
 {

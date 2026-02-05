@@ -1,4 +1,5 @@
 // Configuración de DI y servicios de infraestructura
+using Microsoft.Extensions.DependencyInjection;
 using DraftGapBackend.Application.Users;
 using DraftGapBackend.Domain.Abstractions;
 using DraftGapBackend.Infrastructure.Persistence;
