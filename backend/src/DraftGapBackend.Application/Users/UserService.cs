@@ -1,4 +1,5 @@
-// Implementación de servicios de aplicación
+// Implementación de la lógica de aplicación para usuarios
+// Orquesta la lógica de registro y login usando el repositorio de dominio
 using DraftGapBackend.Domain.Abstractions;
 using DraftGapBackend.Domain.Users;
 using System.Threading.Tasks;
@@ -9,18 +10,21 @@ namespace DraftGapBackend.Application.Users
     public class UserService : IUserService
     {
         private readonly IUserRepository _userRepository;
+        // Inyección del repositorio de usuarios
         public UserService(IUserRepository userRepository)
         {
             _userRepository = userRepository;
         }
+        // Lógica de registro de usuario (a implementar)
         public async Task<User> RegisterAsync(RegisterUserRequest request)
         {
-            // ...lógica de registro (hash, validaciones)...
+            // Aquí se implementará la lógica de registro (validaciones, hash, etc.)
             throw new NotImplementedException();
         }
+        // Lógica de login de usuario (a implementar)
         public async Task<User?> LoginAsync(LoginUserRequest request)
         {
-            // ...lógica de login (verificar hash)...
+            // Aquí se implementará la lógica de login (verificar hash, etc.)
             throw new NotImplementedException();
         }
     }
