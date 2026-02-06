@@ -12,8 +12,8 @@ namespace DraftGapBackend.Infrastructure
         // Método de extensión para registrar servicios de infraestructura
         public static IServiceCollection AddInfrastructure(this IServiceCollection services)
         {
-            // Repositorio de usuarios en memoria
-            services.AddScoped<IUserRepository, InMemoryUserRepository>();
+            // Cambiado a Singleton para que la lista de usuarios se comparta entre peticiones
+            services.AddSingleton<IUserRepository, InMemoryUserRepository>();
             // Servicio de usuario de aplicación
             services.AddScoped<IUserService, UserService>();
             // ...otros servicios...
