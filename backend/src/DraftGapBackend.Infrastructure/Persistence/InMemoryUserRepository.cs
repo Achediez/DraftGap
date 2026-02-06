@@ -18,5 +18,7 @@ namespace DraftGapBackend.Infrastructure.Persistence
         public Task<User?> GetByUserNameAsync(string userName) => Task.FromResult(_users.FirstOrDefault(u => u.UserName == userName));
         // Agrega un usuario a la lista
         public Task AddAsync(User user) { _users.Add(user); return Task.CompletedTask; }
+        // Método auxiliar para depuración: obtener todos los usuarios
+        public List<User> GetAllUsers() => _users;
     }
 }

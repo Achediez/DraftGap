@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System;
 using System.Security.Cryptography;
 using System.Text;
+using System.Collections.Generic;
 
 namespace DraftGapBackend.Application.Users
 {
@@ -37,12 +38,15 @@ namespace DraftGapBackend.Application.Users
                 PasswordHash = passwordHash
             };
             await _userRepository.AddAsync(user);
+            // Imprime la lista de usuarios tras registrar
+            PrintAllUsers();
             return user;
         }
         // Lógica de login de usuario
         public async Task<User?> LoginAsync(LoginUserRequest request)
         {
-            // Buscar usuario por email o username
+            // Imprime la lista de usuarios antes de intentar login
+            PrintAllUsers();
             User? user = null;
             if (!string.IsNullOrWhiteSpace(request.EmailOrUserName))
             {
@@ -50,13 +54,23 @@ namespace DraftGapBackend.Application.Users
                        await _userRepository.GetByUserNameAsync(request.EmailOrUserName);
             }
             if (user == null)
+            {
+                Console.WriteLine($"No se encontró usuario con email/username: {request.EmailOrUserName}");
                 return null;
+            }
             // Verificar contraseña
+            var inputHash = HashPassword(request.Password);
+            Console.WriteLine($"Hash esperado: {user.PasswordHash}");
+            Console.WriteLine($"Hash recibido: {inputHash}");
             if (!VerifyPassword(request.Password, user.PasswordHash))
+            {
+                Console.WriteLine("El hash de la contraseña no coincide");
                 return null;
+            }
+            Console.WriteLine("Login exitoso");
             return user;
         }
-        // Hash de contraseña simple (usa un algoritmo más seguro en producción)
+        // Hash de contraseña simple 
         private static string HashPassword(string password)
         {
             using var sha256 = SHA256.Create();
@@ -67,6 +81,24 @@ namespace DraftGapBackend.Application.Users
         private static bool VerifyPassword(string password, string hash)
         {
             return HashPassword(password) == hash;
+        }
+        // Método auxiliar para imprimir todos los usuarios registrados
+        private void PrintAllUsers()
+        {
+            // Usa reflexión para acceder a la lista interna _users si existe
+            var usersField = _userRepository.GetType().GetField("_users", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            if (usersField != null)
+            {
+                var users = usersField.GetValue(_userRepository) as IEnumerable<User>;
+                if (users != null)
+                {
+                    Console.WriteLine("Usuarios registrados en memoria:");
+                    foreach (var u in users)
+                    {
+                        Console.WriteLine($"Id: {u.Id}, Email: {u.Email}, UserName: {u.UserName}, Hash: {u.PasswordHash}");
+                    }
+                }
+            }
         }
     }
 }
