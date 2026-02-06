@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using System;
 using System.Security.Cryptography;
 using System.Text;
-using System.Collections.Generic;
 
 namespace DraftGapBackend.Application.Users
 {
@@ -21,38 +20,28 @@ namespace DraftGapBackend.Application.Users
         // Lógica de registro de usuario
         public async Task<User> RegisterAsync(RegisterUserRequest request)
         {
-            // Validar si el email o username ya existen
-            var existingByEmail = await _userRepository.GetByEmailAsync(request.Email);
-            if (existingByEmail != null)
-                throw new InvalidOperationException("El email ya está registrado");
-            var existingByUserName = await _userRepository.GetByUserNameAsync(request.UserName);
-            if (existingByUserName != null)
-                throw new InvalidOperationException("El nombre de usuario ya está registrado");
-            // Hashear la contraseña
-            var passwordHash = HashPassword(request.Password);
+            await EnsureUserDoesNotExist(request.Email, request.UserName);
             var user = new User
             {
                 Id = Guid.NewGuid(),
                 Email = request.Email,
                 UserName = request.UserName,
-                PasswordHash = passwordHash
+                PasswordHash = HashPassword(request.Password)
             };
             await _userRepository.AddAsync(user);
             // Imprime la lista de usuarios tras registrar
-            PrintAllUsers();
+            LogAllUsers();
             return user;
         }
         // Lógica de login de usuario
         public async Task<User?> LoginAsync(LoginUserRequest request)
         {
             // Imprime la lista de usuarios antes de intentar login
-            PrintAllUsers();
-            User? user = null;
-            if (!string.IsNullOrWhiteSpace(request.EmailOrUserName))
-            {
-                user = await _userRepository.GetByEmailAsync(request.EmailOrUserName) ??
-                       await _userRepository.GetByUserNameAsync(request.EmailOrUserName);
-            }
+            LogAllUsers();
+            var user = !string.IsNullOrWhiteSpace(request.EmailOrUserName)
+                ? await _userRepository.GetByEmailAsync(request.EmailOrUserName) ??
+                  await _userRepository.GetByUserNameAsync(request.EmailOrUserName)
+                : null;
             if (user == null)
             {
                 Console.WriteLine($"No se encontró usuario con email/username: {request.EmailOrUserName}");
@@ -70,6 +59,14 @@ namespace DraftGapBackend.Application.Users
             Console.WriteLine("Login exitoso");
             return user;
         }
+        // Asegura que el usuario no exista ya por email o username
+        private async Task EnsureUserDoesNotExist(string email, string userName)
+        {
+            if (await _userRepository.GetByEmailAsync(email) != null)
+                throw new InvalidOperationException("El email ya está registrado");
+            if (await _userRepository.GetByUserNameAsync(userName) != null)
+                throw new InvalidOperationException("El nombre de usuario ya está registrado");
+        }
         // Hash de contraseña simple 
         private static string HashPassword(string password)
         {
@@ -78,29 +75,27 @@ namespace DraftGapBackend.Application.Users
             return Convert.ToBase64String(bytes);
         }
         // Verifica el hash de la contraseña
-        private static bool VerifyPassword(string password, string hash)
+        private static bool VerifyPassword(string password, string hash) =>
+            HashPassword(password) == hash;
+        // Log de usuarios en memoria usando reflexión
+        private void LogAllUsers()
         {
-            return HashPassword(password) == hash;
-        }
-        // Método auxiliar para imprimir todos los usuarios registrados
-        private void PrintAllUsers()
-        {
-            // Usa reflexión para acceder a la lista interna _users si existe
             var usersField = _userRepository.GetType().GetField("_users", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             if (usersField != null)
             {
-                var users = usersField.GetValue(_userRepository) as IEnumerable<User>;
+                var users = usersField.GetValue(_userRepository) as System.Collections.IEnumerable;
                 if (users != null)
                 {
                     Console.WriteLine("Usuarios registrados en memoria:");
                     foreach (var u in users)
                     {
-                        Console.WriteLine($"Id: {u.Id}, Email: {u.Email}, UserName: {u.UserName}, Hash: {u.PasswordHash}");
+                        if (u is User user)
+                        {
+                            Console.WriteLine($"Id: {user.Id}, Email: {user.Email}, UserName: {user.UserName}, Hash: {user.PasswordHash}");
+                        }
                     }
                 }
             }
         }
     }
 }
-
-
