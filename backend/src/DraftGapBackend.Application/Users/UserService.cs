@@ -83,4 +83,18 @@ public class UserService : IUserService
     {
         return await _userRepository.GetAllActiveUsersAsync();
     }
+
+    public async Task UpdateUserAsync(User user)
+    {
+        if (user == null)
+            throw new ArgumentNullException(nameof(user));
+
+        await _userRepository.UpdateAsync(user);
+    }
+
+    public async Task<User?> GetUserByRiotIdAsync(string riotId)
+    {
+        return await _userRepository.GetByRiotIdAsync(riotId);
+    }
+
 }

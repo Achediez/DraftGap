@@ -59,11 +59,18 @@ public class AuthController : ControllerBase
 
             _logger.LogInformation("✅ Riot account verified: PUUID = {Puuid}", riotAccount.Puuid);
 
-            // Check if Riot ID already registered
+            // Check if email already registered
             var existingUser = await _userService.GetUserByEmailAsync(request.Email);
             if (existingUser != null)
             {
                 return BadRequest(new { error = "Email already registered" });
+            }
+
+            // Check if Riot ID already registered
+            var existingRiotUser = await _userService.GetUserByRiotIdAsync(request.RiotId);
+            if (existingRiotUser != null)
+            {
+                return BadRequest(new { error = "Riot ID already registered to another account" });
             }
 
             // Register user with Riot data
@@ -75,13 +82,17 @@ public class AuthController : ControllerBase
 
             var authResponse = await _userService.RegisterAsync(registerRequest);
 
-            // Update user with Riot data
+            // FIX: Update user with Riot data in database
             var user = await _userService.GetUserByIdAsync(authResponse.UserId);
             if (user != null)
             {
                 user.RiotId = request.RiotId;
                 user.RiotPuuid = riotAccount.Puuid;
-                // TODO: Call UpdateAsync when implemented
+
+                // Save updated user to database
+                await _userService.UpdateUserAsync(user);
+
+                _logger.LogInformation("✅ Riot data saved: RiotId={RiotId}, Puuid={Puuid}", user.RiotId, user.RiotPuuid);
             }
 
             var token = GenerateJwtToken(authResponse.UserId, authResponse.Email, false);
@@ -94,6 +105,7 @@ public class AuthController : ControllerBase
                 email = authResponse.Email,
                 riotId = request.RiotId,
                 puuid = riotAccount.Puuid,
+                region = request.Region,
                 isAdmin = false,
                 expiresAt = DateTime.UtcNow.AddDays(1)
             });
@@ -109,6 +121,7 @@ public class AuthController : ControllerBase
             return StatusCode(500, new { error = "Registration failed. Check if Riot API key is configured." });
         }
     }
+
 
 
     [HttpPost("login")]
