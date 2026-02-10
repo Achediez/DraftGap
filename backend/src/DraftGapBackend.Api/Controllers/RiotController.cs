@@ -1,6 +1,7 @@
 using DraftGapBackend.Infrastructure.Riot;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
+using SummonerDto = DraftGapBackend.Infrastructure.Riot.SummonerDto;
 
 namespace DraftGapBackend.Api.Controllers;
 
