@@ -1,61 +1,125 @@
-// Programa principal de la API DraftGapBackend
-// Configura y arranca la aplicaciÛn web ASP.NET Core
-//
-// CaracterÌsticas principales:
-// - ConfiguraciÛn de servicios y dependencias
-// - IntegraciÛn de Swagger para documentaciÛn OpenAPI
-// - Registro de controladores y endpoints
-// - ConfiguraciÛn del pipeline HTTP
-//
-// .NET 9, C# 13
-
-using DraftGapBackend.Infrastructure;
+Ôªøusing Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using Swashbuckle.AspNetCore.SwaggerGen;
-using System.Diagnostics; // Para abrir el navegador autom·ticamente
+using System.Text;
+using DraftGapBackend.Application.Users;
+using DraftGapBackend.Domain.Abstractions;
+using DraftGapBackend.Infrastructure.Persistence;
+using DraftGapBackend.Infrastructure.Riot;
 
-// Crea el builder para configurar la aplicaciÛn web
 var builder = WebApplication.CreateBuilder(args);
 
-// Registro de servicios en el contenedor de dependencias
-// Controladores para la API REST
+// Add services to the container
 builder.Services.AddControllers();
-// Descubrimiento de endpoints para Swagger
 builder.Services.AddEndpointsApiExplorer();
-// ConfiguraciÛn de Swagger/OpenAPI para documentaciÛn interactiva
+
+// Configure Swagger with JWT support
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "DraftGap API", Version = "v1" });
-});
-// Registro de servicios de infraestructura (repositorios, servicios de dominio, etc.)
-// Pasamos la configuraciÛn para que los servicios puedan leer secrets.json
-builder.Services.AddInfrastructure(builder.Configuration);
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "DraftGap API",
+        Version = "v1",
+        Description = "League of Legends Stats Tracker API"
+    });
 
-// Construye la aplicaciÛn
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token.",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
+
+// Configure JWT Authentication
+var jwtSettings = builder.Configuration.GetSection("Jwt");
+var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured");
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
+    };
+});
+
+builder.Services.AddAuthorization();
+
+// ‚ö†Ô∏è CRITICAL: Use Singleton for InMemoryUserRepository to persist data across requests
+builder.Services.AddSingleton<IUserRepository, InMemoryUserRepository>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddHttpClient<IRiotService, RiotService>();
+builder.Services.AddScoped<IRiotService, RiotService>();
+
+// Configure CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
 var app = builder.Build();
 
-// ConfiguraciÛn del pipeline HTTP
+// Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
-    // Habilita Swagger y su UI solo en desarrollo
     app.UseSwagger();
-    app.UseSwaggerUI();
-
-    // Detecta la URL real de Swagger y la abre en el navegador predeterminado
-    var serverAddresses = app.Urls.Count > 0 ? app.Urls : builder.WebHost.GetSetting("urls")?.Split(';') ?? new string[] { "https://localhost:5001" };
-    var swaggerUrl = serverAddresses.First().TrimEnd('/') + "/swagger";
-    try
+    app.UseSwaggerUI(c =>
     {
-        Process.Start(new ProcessStartInfo { FileName = swaggerUrl, UseShellExecute = true });
-    }
-    catch { /* Ignorar errores si no se puede abrir el navegador */ }
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "DraftGap API v1");
+        c.RoutePrefix = string.Empty;
+    });
 }
 
-// RedirecciÛn HTTPS obligatoria
 app.UseHttpsRedirection();
-// Middleware de autorizaciÛn (puede requerir configuraciÛn adicional)
+app.UseCors("AllowAll");
+app.UseAuthentication();
 app.UseAuthorization();
-// Mapeo de controladores a rutas
 app.MapControllers();
-// Inicia la aplicaciÛn
+
+// Health check endpoint
+app.MapGet("/health", () => Results.Ok(new
+{
+    status = "healthy",
+    timestamp = DateTime.UtcNow,
+    version = "1.0.0"
+}));
+
+Console.WriteLine("‚úÖ DraftGap API Starting...");
+Console.WriteLine($"üìÖ Environment: {app.Environment.EnvironmentName}");
+Console.WriteLine($"üåê Listening on: http://localhost:5057");
+Console.WriteLine($"üöÄ Swagger UI: http://localhost:5057/");
+
 app.Run();
