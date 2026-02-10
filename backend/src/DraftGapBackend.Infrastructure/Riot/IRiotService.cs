@@ -1,17 +1,14 @@
-// Servicio de integración con la API de Riot (interfaz)
-// Este archivo define los métodos que expone el servicio Riot para
-// comprobar si existe un summoner y obtener información básica.
-// La implementación concreta reside en RiotService.cs.
-
+using System.Collections.Generic;
 using System.Threading.Tasks;
-using DraftGapBackend.Domain.Users;
 
-namespace DraftGapBackend.Infrastructure.Riot
+namespace DraftGapBackend.Infrastructure.Riot;
+
+public interface IRiotService
 {
-    public interface IRiotService
-    {
-        Task<bool> SummonerExistsAsync(string summonerName);
-        Task<SummonerDto?> GetSummonerByNameAsync(string summonerName);
-        // ...otros métodos para partidas, mmr, etc.
-    }
+    Task<RiotAccountDto?> GetAccountByRiotIdAsync(string gameName, string tagLine, string region = "europe");
+    Task<SummonerDto?> GetSummonerByPuuidAsync(string puuid, string platform = "euw1");
+    Task<List<RankedStatsDto>> GetRankedStatsByPuuidAsync(string puuid, string platform = "euw1");
+    Task<List<string>> GetMatchIdsByPuuidAsync(string puuid, string region = "europe", int count = 20);
+    Task<MatchDto?> GetMatchByIdAsync(string matchId, string region = "europe");
+    Task<RateLimitStatus> GetRateLimitStatusAsync();
 }
