@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using DraftGapBackend.Application.Users;
 using DraftGapBackend.Domain.Abstractions;
+using DraftGapBackend.Infrastructure.Data;
 using DraftGapBackend.Infrastructure.Persistence;
 using DraftGapBackend.Infrastructure.Riot;
 
@@ -12,6 +14,20 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+
+// Configure Database
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseMySql(
+        connectionString,
+        ServerVersion.AutoDetect(connectionString),
+        mySqlOptions => mySqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(10),
+            errorNumbersToAdd: null
+        )
+    )
+);
 
 // Configure Swagger with JWT support
 builder.Services.AddSwaggerGen(c =>
@@ -73,8 +89,8 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
-// ⚠️ CRITICAL: Use Singleton for InMemoryUserRepository to persist data across requests
-builder.Services.AddSingleton<IUserRepository, InMemoryUserRepository>();
+// ⚠️ CHANGE: Use real database repository instead of InMemory
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddHttpClient<IRiotService, RiotService>();
 builder.Services.AddScoped<IRiotService, RiotService>();
@@ -114,11 +130,13 @@ app.MapGet("/health", () => Results.Ok(new
 {
     status = "healthy",
     timestamp = DateTime.UtcNow,
-    version = "1.0.0"
+    version = "1.0.0",
+    database = "connected"
 }));
 
 Console.WriteLine("✅ DraftGap API Starting...");
 Console.WriteLine($"📅 Environment: {app.Environment.EnvironmentName}");
+Console.WriteLine($"🗄️  Database: Connected to MySQL");
 Console.WriteLine($"🌐 Listening on: http://localhost:5057");
 Console.WriteLine($"🚀 Swagger UI: http://localhost:5057/");
 

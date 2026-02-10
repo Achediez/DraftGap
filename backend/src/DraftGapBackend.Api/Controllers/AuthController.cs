@@ -35,8 +35,38 @@ public class AuthController : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Registration attempt for: {Email}", request.Email);
+            _logger.LogInformation("Registration attempt for: {Email} with Riot ID: {RiotId}", request.Email, request.RiotId);
 
+            // Split Riot ID (GameName#TAG)
+            var riotIdParts = request.RiotId.Split('#');
+            if (riotIdParts.Length != 2)
+            {
+                return BadRequest(new { error = "Invalid Riot ID format. Use: GameName#TAG" });
+            }
+
+            var gameName = riotIdParts[0];
+            var tagLine = riotIdParts[1];
+
+            // Verify Riot account exists
+            _logger.LogInformation("Verifying Riot account: {GameName}#{TagLine}", gameName, tagLine);
+            var riotAccount = await _riotService.GetAccountByRiotIdAsync(gameName, tagLine, request.Region);
+
+            if (riotAccount == null)
+            {
+                _logger.LogWarning("Riot account not found: {GameName}#{TagLine}", gameName, tagLine);
+                return BadRequest(new { error = "Riot account not found. Please check your Riot ID and region." });
+            }
+
+            _logger.LogInformation("✅ Riot account verified: PUUID = {Puuid}", riotAccount.Puuid);
+
+            // Check if Riot ID already registered
+            var existingUser = await _userService.GetUserByEmailAsync(request.Email);
+            if (existingUser != null)
+            {
+                return BadRequest(new { error = "Email already registered" });
+            }
+
+            // Register user with Riot data
             var registerRequest = new RegisterRequest
             {
                 Email = request.Email,
@@ -44,15 +74,26 @@ public class AuthController : ControllerBase
             };
 
             var authResponse = await _userService.RegisterAsync(registerRequest);
+
+            // Update user with Riot data
+            var user = await _userService.GetUserByIdAsync(authResponse.UserId);
+            if (user != null)
+            {
+                user.RiotId = request.RiotId;
+                user.RiotPuuid = riotAccount.Puuid;
+                // TODO: Call UpdateAsync when implemented
+            }
+
             var token = GenerateJwtToken(authResponse.UserId, authResponse.Email, false);
 
-            _logger.LogInformation("✅ User registered successfully: {Email}", request.Email);
+            _logger.LogInformation("✅ User registered successfully: {Email} - {RiotId}", request.Email, request.RiotId);
 
             return Ok(new
             {
                 token,
                 email = authResponse.Email,
                 riotId = request.RiotId,
+                puuid = riotAccount.Puuid,
                 isAdmin = false,
                 expiresAt = DateTime.UtcNow.AddDays(1)
             });
@@ -65,9 +106,10 @@ public class AuthController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Registration error for {Email}", request.Email);
-            return StatusCode(500, new { error = "Registration failed" });
+            return StatusCode(500, new { error = "Registration failed. Check if Riot API key is configured." });
         }
     }
+
 
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
