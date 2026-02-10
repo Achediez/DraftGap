@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using System;
 using System.Security.Cryptography;
 using System.Text;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace DraftGapBackend.Application.Users
 {
@@ -20,18 +22,15 @@ namespace DraftGapBackend.Application.Users
         // Lógica de registro de usuario
         public async Task<User> RegisterAsync(RegisterUserRequest request)
         {
-            try
+            // Validaciones de seguridad y formato (acumula todos los errores)
+            var validationErrors = UserValidator.ValidateAll(request.UserName, request.Email, request.Password);
+            if (validationErrors.Any())
             {
-                // Validaciones de seguridad y formato
-                UserValidator.ValidateUserName(request.UserName); // Valida el nombre de usuario
-                UserValidator.ValidateEmail(request.Email);       // Valida el email
-                UserValidator.ValidatePassword(request.Password); // Valida la contraseña
-            }
-            catch (Exception ex)
-            {
-                // Muestra el error de validación en consola y relanza la excepción
-                Console.WriteLine($"[VALIDATION ERROR] {ex.Message}");
-                throw;
+                // Muestra todos los errores en consola
+                foreach (var err in validationErrors)
+                    Console.WriteLine($"[VALIDATION ERROR] {err}");
+                // Lanza una excepción con todos los errores concatenados
+                throw new ArgumentException(string.Join(" | ", validationErrors));
             }
 
             await EnsureUserDoesNotExist(request.Email, request.UserName);
