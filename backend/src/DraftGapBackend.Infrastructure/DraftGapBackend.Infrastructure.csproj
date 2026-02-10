@@ -8,5 +8,7 @@
     <ProjectReference Include="..\DraftGapBackend.Domain\DraftGapBackend.Domain.csproj" />
     <ProjectReference Include="..\DraftGapBackend.Application\DraftGapBackend.Application.csproj" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.0" />
   </ItemGroup>
 </Project>

@@ -28,7 +28,8 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "DraftGap API", Version = "v1" });
 });
 // Registro de servicios de infraestructura (repositorios, servicios de dominio, etc.)
-builder.Services.AddInfrastructure();
+// Pasamos la configuración para que los servicios puedan leer secrets.json
+builder.Services.AddInfrastructure(builder.Configuration);
 
 // Construye la aplicación
 var app = builder.Build();
