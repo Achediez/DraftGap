@@ -20,6 +20,20 @@ namespace DraftGapBackend.Application.Users
         // Lógica de registro de usuario
         public async Task<User> RegisterAsync(RegisterUserRequest request)
         {
+            try
+            {
+                // Validaciones de seguridad y formato
+                UserValidator.ValidateUserName(request.UserName); // Valida el nombre de usuario
+                UserValidator.ValidateEmail(request.Email);       // Valida el email
+                UserValidator.ValidatePassword(request.Password); // Valida la contraseña
+            }
+            catch (Exception ex)
+            {
+                // Muestra el error de validación en consola y relanza la excepción
+                Console.WriteLine($"[VALIDATION ERROR] {ex.Message}");
+                throw;
+            }
+
             await EnsureUserDoesNotExist(request.Email, request.UserName);
             var user = new User
             {
