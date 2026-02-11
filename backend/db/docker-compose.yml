@@ -1,0 +1,40 @@
+services:
+  db:
+    build: .
+    container_name: draftgap_db
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      # Credentials for the database
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      # Persist data so you don't lose users/matches when restarting
+      - db_data:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --skip-name-resolve
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: draftgap_phpmyadmin
+    restart: always
+    ports:
+      # Access phpMyAdmin at http://10.128.10.30:8080 || http://localhost:8080
+      - "8080:80"
+    environment:
+      # Connects to the service named 'db' defined above
+      PMA_HOST: db
+      # Optional: Allows automatic login or simpler setup
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    depends_on:
+      - db
+
+volumes:
+  db_data:
