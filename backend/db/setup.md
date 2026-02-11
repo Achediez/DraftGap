@@ -1,1 +1,1 @@
-/Draftgap/backend/db$ docker-compose up -d --build
+/Draftgap/backend/db$ docker-compose --env-file .env up -d --build

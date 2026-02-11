@@ -1,5 +1,7 @@
 -- DraftGap Database Schema
 -- MySQL 8.0+
+-- Created: February 2026
+-- FK constraints moved to bottom for easier relationship inspection
 
 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
@@ -13,14 +15,15 @@ USE `draftgap`;
 -- =====================================================
 
 CREATE TABLE `users` (
-  `user_id` CHAR(36) NOT NULL, -- 'UUID format',
+  `user_id` CHAR(36) NOT NULL, -- UUID format
   `email` VARCHAR(255) NOT NULL,
   `password_hash` VARCHAR(255) NOT NULL,
-  `riot_id` VARCHAR(100) NULL, -- 'Format: GameName#TagLine',
-  `riot_puuid` VARCHAR(78) NULL, -- 'Riot permanent player ID',
+  `riot_id` VARCHAR(100) NULL, -- Format: GameName#TagLine
+  `riot_puuid` VARCHAR(78) NULL, -- Riot permanent player ID
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `last_sync` TIMESTAMP NULL, -- 'Last Riot API data sync',
+  `last_sync` TIMESTAMP NULL, -- Last Riot API data sync
   `is_active` BOOLEAN NOT NULL DEFAULT TRUE,
+
   PRIMARY KEY (`user_id`),
   UNIQUE INDEX `uq_email` (`email`),
   UNIQUE INDEX `uq_riot_id` (`riot_id`),
@@ -39,8 +42,9 @@ CREATE TABLE `players` (
   `summoner_name` VARCHAR(100) NULL,
   `profile_icon_id` INT NULL,
   `summoner_level` INT NULL,
-  `region` VARCHAR(10) NOT NULL, -- 'EUW1, NA1, KR, etc.',
+  `region` VARCHAR(10) NOT NULL, -- EUW1, NA1, KR, etc.
   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
   PRIMARY KEY (`player_id`),
   UNIQUE INDEX `uq_puuid` (`puuid`),
   INDEX `idx_summoner_id` (`summoner_id`),
@@ -50,16 +54,16 @@ CREATE TABLE `players` (
 CREATE TABLE `player_ranked_stats` (
   `ranked_stat_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `puuid` VARCHAR(78) NOT NULL,
-  `queue_type` VARCHAR(50) NOT NULL, -- 'RANKED_SOLO_5x5, RANKED_FLEX_SR',
-  `tier` VARCHAR(20) NULL, -- 'IRON, BRONZE, SILVER, GOLD, PLATINUM, EMERALD, DIAMOND, MASTER, GRANDMASTER, CHALLENGER',
-  `rank` VARCHAR(5) NULL, -- 'I, II, III, IV',
+  `queue_type` VARCHAR(50) NOT NULL, -- RANKED_SOLO_5x5, RANKED_FLEX_SR
+  `tier` VARCHAR(20) NULL, -- IRON..CHALLENGER
+  `rank` VARCHAR(5) NULL, -- I, II, III, IV
   `league_points` INT NULL,
   `wins` INT NOT NULL DEFAULT 0,
   `losses` INT NOT NULL DEFAULT 0,
   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
   PRIMARY KEY (`ranked_stat_id`),
   UNIQUE INDEX `uq_puuid_queue` (`puuid`, `queue_type`),
-  FOREIGN KEY (`puuid`) REFERENCES `players` (`puuid`) ON DELETE CASCADE ON UPDATE CASCADE,
   INDEX `idx_tier_rank` (`tier`, `rank`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -68,47 +72,53 @@ CREATE TABLE `player_ranked_stats` (
 -- =====================================================
 
 CREATE TABLE `matches` (
-  `match_id` VARCHAR(50) NOT NULL, -- 'Riot match ID (e.g., EUW1_6847231920)',
-  `game_creation` BIGINT NOT NULL, -- 'Unix timestamp in milliseconds',
-  `game_duration` INT NOT NULL, -- 'Duration in seconds',
-  `game_mode` VARCHAR(50) NOT NULL, -- 'CLASSIC, ARAM, URF, etc.',
-  `game_type` VARCHAR(50) NOT NULL, -- 'MATCHED_GAME, CUSTOM_GAME',
-  `queue_id` INT NOT NULL, -- '420=Ranked Solo, 440=Ranked Flex, 400=Normal Draft, etc.',
+  `match_id` VARCHAR(50) NOT NULL, -- e.g., EUW1_6847231920
+  `game_creation` BIGINT NOT NULL, -- Unix timestamp in ms
+  `game_duration` INT NOT NULL, -- seconds
+  `game_mode` VARCHAR(50) NOT NULL, -- CLASSIC, ARAM, URF...
+  `game_type` VARCHAR(50) NOT NULL, -- MATCHED_GAME, CUSTOM_GAME
+  `queue_id` INT NOT NULL, -- 420=Ranked Solo, 440=Flex, etc.
   `platform_id` VARCHAR(10) NOT NULL,
-  `game_version` VARCHAR(20) NOT NULL, -- 'Patch version',
+  `game_version` VARCHAR(20) NOT NULL, -- Patch version
   `fetched_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
   PRIMARY KEY (`match_id`),
   INDEX `idx_game_creation` (`game_creation`),
   INDEX `idx_queue_date` (`queue_id`, `game_creation`),
   INDEX `idx_platform_date` (`platform_id`, `game_creation`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-
 CREATE TABLE `match_participants` (
   `participant_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `match_id` VARCHAR(50) NOT NULL,
   `puuid` VARCHAR(78) NOT NULL,
+
   `champion_id` INT NOT NULL,
   `champion_name` VARCHAR(50) NOT NULL,
-  `team_id` INT NOT NULL, -- '100=Blue side, 200=Red side',
-  `team_position` VARCHAR(20) NOT NULL, -- 'TOP, JUNGLE, MIDDLE, BOTTOM, UTILITY',
+  `team_id` INT NOT NULL, -- 100=Blue, 200=Red
+  `team_position` VARCHAR(20) NOT NULL, -- TOP,JUNGLE,MIDDLE,BOTTOM,UTILITY
   `win` BOOLEAN NOT NULL,
+
   `kills` INT NOT NULL DEFAULT 0,
   `deaths` INT NOT NULL DEFAULT 0,
   `assists` INT NOT NULL DEFAULT 0,
+
   `gold_earned` INT NOT NULL DEFAULT 0,
   `total_damage_dealt` INT NOT NULL DEFAULT 0,
   `total_damage_dealt_to_champions` INT NOT NULL DEFAULT 0,
   `total_damage_taken` INT NOT NULL DEFAULT 0,
   `vision_score` INT NOT NULL DEFAULT 0,
-  `cs` INT NOT NULL DEFAULT 0, -- 'Total minions killed',
+  `cs` INT NOT NULL DEFAULT 0, -- Total minions killed
+
   `double_kills` INT NOT NULL DEFAULT 0,
   `triple_kills` INT NOT NULL DEFAULT 0,
   `quadra_kills` INT NOT NULL DEFAULT 0,
   `penta_kills` INT NOT NULL DEFAULT 0,
   `first_blood` BOOLEAN NOT NULL DEFAULT FALSE,
+
   `summoner1_id` INT NULL,
   `summoner2_id` INT NULL,
+
   `item0` INT NULL,
   `item1` INT NULL,
   `item2` INT NULL,
@@ -116,17 +126,17 @@ CREATE TABLE `match_participants` (
   `item4` INT NULL,
   `item5` INT NULL,
   `item6` INT NULL,
-  `perk_primary_style` INT NULL, -- 'Primary rune tree',
-  `perk_sub_style` INT NULL, -- 'Secondary rune tree',
+
+  `perk_primary_style` INT NULL,
+  `perk_sub_style` INT NULL,
   `perk0` INT NULL,
   `perk1` INT NULL,
   `perk2` INT NULL,
   `perk3` INT NULL,
   `perk4` INT NULL,
   `perk5` INT NULL,
+
   PRIMARY KEY (`participant_id`),
-  FOREIGN KEY (`match_id`) REFERENCES `matches` (`match_id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  FOREIGN KEY (`puuid`) REFERENCES `players` (`puuid`) ON DELETE CASCADE ON UPDATE CASCADE,
   UNIQUE INDEX `uq_match_puuid` (`match_id`, `puuid`),
   INDEX `idx_puuid_analytics` (`puuid`, `win`, `champion_id`),
   INDEX `idx_champion_role` (`champion_id`, `team_position`),
@@ -140,69 +150,82 @@ CREATE TABLE `match_participants` (
 CREATE TABLE `player_statistics_summary` (
   `summary_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `puuid` VARCHAR(78) NOT NULL,
-  `queue_type` VARCHAR(50) NOT NULL, -- 'ALL, RANKED_SOLO, RANKED_FLEX, NORMAL',
+  `queue_type` VARCHAR(50) NOT NULL, -- ALL, RANKED_SOLO, RANKED_FLEX, NORMAL
+
   `total_games` INT NOT NULL DEFAULT 0,
   `wins` INT NOT NULL DEFAULT 0,
   `losses` INT NOT NULL DEFAULT 0,
-  `winrate` DECIMAL(5,2) NOT NULL DEFAULT 0.00, -- 'Percentage',
+  `winrate` DECIMAL(5,2) NOT NULL DEFAULT 0.00,
+
   `avg_kills` DECIMAL(5,2) NOT NULL DEFAULT 0.00,
   `avg_deaths` DECIMAL(5,2) NOT NULL DEFAULT 0.00,
   `avg_assists` DECIMAL(5,2) NOT NULL DEFAULT 0.00,
   `kda_ratio` DECIMAL(5,2) NOT NULL DEFAULT 0.00,
+
   `avg_cs` DECIMAL(6,2) NOT NULL DEFAULT 0.00,
   `avg_vision_score` DECIMAL(5,2) NOT NULL DEFAULT 0.00,
   `avg_damage_dealt` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+
   `total_pentas` INT NOT NULL DEFAULT 0,
   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
   PRIMARY KEY (`summary_id`),
-  UNIQUE INDEX `uq_puuid_queue` (`puuid`, `queue_type`),
-  FOREIGN KEY (`puuid`) REFERENCES `players` (`puuid`) ON DELETE CASCADE ON UPDATE CASCADE,
-  INDEX `idx_winrate` (`winrate`)
+  UNIQUE INDEX `uq_puuid_queue_summary` (`puuid`, `queue_type`),
+  INDEX `idx_winrate_summary` (`winrate`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `champion_pool_stats` (
   `champion_pool_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `puuid` VARCHAR(78) NOT NULL,
+
   `champion_id` INT NOT NULL,
   `champion_name` VARCHAR(50) NOT NULL,
+
   `games_played` INT NOT NULL DEFAULT 0,
   `wins` INT NOT NULL DEFAULT 0,
   `losses` INT NOT NULL DEFAULT 0,
   `winrate` DECIMAL(5,2) NOT NULL DEFAULT 0.00,
+
   `avg_kills` DECIMAL(5,2) NOT NULL DEFAULT 0.00,
   `avg_deaths` DECIMAL(5,2) NOT NULL DEFAULT 0.00,
   `avg_assists` DECIMAL(5,2) NOT NULL DEFAULT 0.00,
   `kda_ratio` DECIMAL(5,2) NOT NULL DEFAULT 0.00,
+
   `avg_cs` DECIMAL(6,2) NOT NULL DEFAULT 0.00,
   `avg_damage` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+
   `most_played_role` VARCHAR(20) NULL,
   `last_played` TIMESTAMP NULL,
   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
   PRIMARY KEY (`champion_pool_id`),
-  UNIQUE INDEX `uq_puuid_champion` (`puuid`, `champion_id`),
-  FOREIGN KEY (`puuid`) REFERENCES `players` (`puuid`) ON DELETE CASCADE ON UPDATE CASCADE,
-  INDEX `idx_games_played` (`games_played` DESC),
-  INDEX `idx_winrate` (`winrate` DESC)
+  UNIQUE INDEX `uq_puuid_champion_pool` (`puuid`, `champion_id`),
+  INDEX `idx_games_played_pool` (`games_played` DESC),
+  INDEX `idx_winrate_pool` (`winrate` DESC)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `champion_matchups` (
   `matchup_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `puuid` VARCHAR(78) NOT NULL,
+
   `champion_id` INT NOT NULL,
   `opponent_champion_id` INT NOT NULL,
   `role` VARCHAR(20) NOT NULL,
+
   `games` INT NOT NULL DEFAULT 0,
   `wins` INT NOT NULL DEFAULT 0,
   `losses` INT NOT NULL DEFAULT 0,
   `winrate` DECIMAL(5,2) NOT NULL DEFAULT 0.00,
+
   `total_kills` INT NOT NULL DEFAULT 0,
   `total_deaths` INT NOT NULL DEFAULT 0,
   `total_assists` INT NOT NULL DEFAULT 0,
-  `avg_cs_diff_15` DECIMAL(6,2) NULL, -- 'CS difference at 15 min',
+  `avg_cs_diff_15` DECIMAL(6,2) NULL,
+
   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
   PRIMARY KEY (`matchup_id`),
   UNIQUE INDEX `uq_matchup` (`puuid`, `champion_id`, `opponent_champion_id`, `role`),
-  FOREIGN KEY (`puuid`) REFERENCES `players` (`puuid`) ON DELETE CASCADE ON UPDATE CASCADE,
   INDEX `idx_champion_opponent` (`champion_id`, `opponent_champion_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -213,23 +236,22 @@ CREATE TABLE `champion_matchups` (
 CREATE TABLE `user_teams` (
   `team_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `team_name` VARCHAR(100) NOT NULL,
-  `team_tag` VARCHAR(10) NULL, -- 'Optional team tag/abbreviation',
-  `created_by` INT UNSIGNED NOT NULL,
+  `team_tag` VARCHAR(10) NULL,
+  `created_by` CHAR(36) NOT NULL, -- FIX: must match users.user_id type
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
   PRIMARY KEY (`team_id`),
-  FOREIGN KEY (`created_by`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   INDEX `idx_created_by` (`created_by`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `user_team_members` (
   `team_id` INT UNSIGNED NOT NULL,
-  `user_id` INT UNSIGNED NOT NULL,
-  `role_in_team` VARCHAR(20) NULL, -- 'Optional: captain, player, sub',
+  `user_id` CHAR(36) NOT NULL, -- FIX: must match users.user_id type
+  `role_in_team` VARCHAR(20) NULL,
   `joined_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
   PRIMARY KEY (`team_id`, `user_id`),
-  FOREIGN KEY (`team_id`) REFERENCES `user_teams` (`team_id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   INDEX `idx_user_teams` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -240,21 +262,21 @@ CREATE TABLE `user_team_members` (
 CREATE TABLE `sync_jobs` (
   `job_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `puuid` VARCHAR(78) NOT NULL,
-  `job_type` VARCHAR(50) NOT NULL, -- 'MATCH_HISTORY, RANKED_STATS, FULL_SYNC',
-  `status` VARCHAR(20) NOT NULL, -- 'PENDING, IN_PROGRESS, COMPLETED, FAILED',
+  `job_type` VARCHAR(50) NOT NULL, -- MATCH_HISTORY, RANKED_STATS, FULL_SYNC
+  `status` VARCHAR(20) NOT NULL, -- PENDING, IN_PROGRESS, COMPLETED, FAILED
   `matches_processed` INT NOT NULL DEFAULT 0,
   `started_at` TIMESTAMP NULL,
   `completed_at` TIMESTAMP NULL,
   `error_message` TEXT NULL,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
   PRIMARY KEY (`job_id`),
-  FOREIGN KEY (`puuid`) REFERENCES `players` (`puuid`) ON DELETE CASCADE ON UPDATE CASCADE,
   INDEX `idx_status` (`status`, `created_at`),
   INDEX `idx_puuid_status` (`puuid`, `status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================================================
--- Static Data Cache (Optional - for champion/item names)
+-- Static Data Cache (Optional)
 -- =====================================================
 
 CREATE TABLE `champions` (
@@ -263,7 +285,7 @@ CREATE TABLE `champions` (
   `champion_name` VARCHAR(100) NOT NULL,
   `title` VARCHAR(100) NULL,
   `image_url` VARCHAR(255) NULL,
-  `version` VARCHAR(20) NOT NULL, -- 'Data Dragon version',
+  `version` VARCHAR(20) NOT NULL,
   PRIMARY KEY (`champion_id`),
   INDEX `idx_champion_key` (`champion_key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -279,6 +301,60 @@ CREATE TABLE `items` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================================================
+-- FOREIGN KEYS (all in one place)
+-- =====================================================
+
+ALTER TABLE `player_ranked_stats`
+  ADD CONSTRAINT `fk_player_ranked_stats_players_puuid`
+  FOREIGN KEY (`puuid`) REFERENCES `players` (`puuid`)
+  ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE `match_participants`
+  ADD CONSTRAINT `fk_match_participants_matches_match_id`
+  FOREIGN KEY (`match_id`) REFERENCES `matches` (`match_id`)
+  ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE `match_participants`
+  ADD CONSTRAINT `fk_match_participants_players_puuid`
+  FOREIGN KEY (`puuid`) REFERENCES `players` (`puuid`)
+  ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE `player_statistics_summary`
+  ADD CONSTRAINT `fk_player_statistics_summary_players_puuid`
+  FOREIGN KEY (`puuid`) REFERENCES `players` (`puuid`)
+  ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE `champion_pool_stats`
+  ADD CONSTRAINT `fk_champion_pool_stats_players_puuid`
+  FOREIGN KEY (`puuid`) REFERENCES `players` (`puuid`)
+  ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE `champion_matchups`
+  ADD CONSTRAINT `fk_champion_matchups_players_puuid`
+  FOREIGN KEY (`puuid`) REFERENCES `players` (`puuid`)
+  ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE `user_teams`
+  ADD CONSTRAINT `fk_user_teams_users_created_by`
+  FOREIGN KEY (`created_by`) REFERENCES `users` (`user_id`)
+  ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE `user_team_members`
+  ADD CONSTRAINT `fk_user_team_members_user_teams_team_id`
+  FOREIGN KEY (`team_id`) REFERENCES `user_teams` (`team_id`)
+  ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE `user_team_members`
+  ADD CONSTRAINT `fk_user_team_members_users_user_id`
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
+  ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE `sync_jobs`
+  ADD CONSTRAINT `fk_sync_jobs_players_puuid`
+  FOREIGN KEY (`puuid`) REFERENCES `players` (`puuid`)
+  ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- =====================================================
 -- Stored Procedures for Aggregation
 -- =====================================================
 
@@ -286,16 +362,11 @@ DELIMITER $$
 
 CREATE PROCEDURE `UpdatePlayerStatistics`(IN p_puuid VARCHAR(78))
 BEGIN
-  DECLARE v_total_games INT;
-  DECLARE v_wins INT;
-  DECLARE v_losses INT;
-
-  -- Overall statistics
   INSERT INTO player_statistics_summary (
     puuid, queue_type, total_games, wins, losses, winrate,
     avg_kills, avg_deaths, avg_assists, kda_ratio, avg_cs, avg_vision_score, avg_damage_dealt, total_pentas
   )
-  SELECT 
+  SELECT
     p_puuid,
     'ALL',
     COUNT(*),
@@ -334,7 +405,7 @@ BEGIN
     puuid, champion_id, champion_name, games_played, wins, losses, winrate,
     avg_kills, avg_deaths, avg_assists, kda_ratio, avg_cs, avg_damage, most_played_role, last_played
   )
-  SELECT 
+  SELECT
     mp.puuid,
     mp.champion_id,
     mp.champion_name,
@@ -348,7 +419,12 @@ BEGIN
     ROUND(CASE WHEN AVG(mp.deaths) = 0 THEN AVG(mp.kills + mp.assists) ELSE AVG((mp.kills + mp.assists) / mp.deaths) END, 2),
     ROUND(AVG(mp.cs), 2),
     ROUND(AVG(mp.total_damage_dealt_to_champions), 2),
-    (SELECT team_position FROM match_participants WHERE puuid = mp.puuid AND champion_id = mp.champion_id GROUP BY team_position ORDER BY COUNT(*) DESC LIMIT 1) as role,
+    (SELECT team_position
+     FROM match_participants
+     WHERE puuid = mp.puuid AND champion_id = mp.champion_id
+     GROUP BY team_position
+     ORDER BY COUNT(*) DESC
+     LIMIT 1) as role,
     MAX(m.game_creation)
   FROM match_participants mp
   INNER JOIN matches m ON mp.match_id = m.match_id
@@ -377,8 +453,8 @@ DELIMITER ;
 -- =====================================================
 
 -- Password: 'admin123' - CHANGE THIS IN PRODUCTION!
-INSERT INTO `users` (`email`, `password_hash`, `is_active`) 
-VALUES ('admin@draftgap.local', '$2a$11$demo.hash.replace.with.real.bcrypt.hash', TRUE);
+INSERT INTO `users` (`user_id`, `email`, `password_hash`, `is_active`)
+VALUES ('UUID-1736156715816841234230674429178', 'admin@draftgap.local', '$2a$11$demo.hash.replace.with.real.bcrypt.hash', TRUE);
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
