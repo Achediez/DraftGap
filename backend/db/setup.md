@@ -1,0 +1,1 @@
+/Draftgap/backend/db$ docker-compose up -d --build
