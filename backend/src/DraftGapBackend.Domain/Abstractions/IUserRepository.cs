@@ -1,4 +1,5 @@
 using DraftGapBackend.Domain.Entities;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -10,7 +11,7 @@ namespace DraftGapBackend.Domain.Abstractions;
 public interface IUserRepository
 {
     // Query operations
-    Task<User?> GetByIdAsync(int userId);
+    Task<User?> GetByIdAsync(Guid userId);
     Task<User?> GetByEmailAsync(string email);
     Task<User?> GetByRiotIdAsync(string riotId);
     Task<User?> GetByRiotPuuidAsync(string puuid);
@@ -20,7 +21,7 @@ public interface IUserRepository
     // Command operations
     Task<User> CreateAsync(User user);
     Task UpdateAsync(User user);
-    Task DeleteAsync(int userId);
+    Task DeleteAsync(Guid userId);
     Task<bool> EmailExistsAsync(string email);
     Task<bool> RiotIdExistsAsync(string riotId);
 }

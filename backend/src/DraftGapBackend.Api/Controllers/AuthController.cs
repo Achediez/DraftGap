@@ -173,7 +173,7 @@ public class AuthController : ControllerBase
         try
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
+            if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var userId))
             {
                 return Unauthorized(new { error = "Invalid token" });
             }
@@ -215,7 +215,7 @@ public class AuthController : ControllerBase
         }));
     }
 
-    private string GenerateJwtToken(int userId, string email, bool isAdmin)
+    private string GenerateJwtToken(Guid userId, string email, bool isAdmin)
     {
         var jwtSettings = _configuration.GetSection("Jwt");
         var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured");
