@@ -40,5 +40,17 @@ namespace DraftGapBackend.Application.Users
 
             return errors;
         }
+
+        /// Valida el formato del RiotId (GameName#TAG)
+        public static string? ValidateRiotIdFormat(string riotId)
+        {
+            if (string.IsNullOrWhiteSpace(riotId))
+                return "El Riot ID es obligatorio.";
+            // Formato: GameName#TAG (GameName: 3-16 letras/números, TAG: 3-5 letras/números)
+            var match = Regex.Match(riotId, @"^[a-zA-Z0-9]{3,16}#[a-zA-Z0-9]{3,5}$");
+            if (!match.Success)
+                return "El formato del Riot ID no es válido. Debe ser GameName#TAG.";
+            return null;
+        }
     }
 }
