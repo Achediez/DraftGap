@@ -15,7 +15,7 @@ USE `draftgap`;
 -- =====================================================
 
 CREATE TABLE `users` (
-  `user_id` CHAR(36) NOT NULL, -- UUID format
+  `user_id` CHAR(36) NOT NULL, -- GUID format
   `email` VARCHAR(255) NOT NULL,
   `password_hash` VARCHAR(255) NOT NULL,
   `riot_id` VARCHAR(100) NULL, -- Format: GameName#TagLine
@@ -454,7 +454,7 @@ DELIMITER ;
 
 -- Password: 'admin123' - CHANGE THIS IN PRODUCTION!
 INSERT INTO `users` (`user_id`, `email`, `password_hash`, `is_active`)
-VALUES ('UUID-1736156715816841234230674429178', 'admin@draftgap.local', '$2a$11$demo.hash.replace.with.real.bcrypt.hash', TRUE);
+VALUES ('aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb', 'admin@draftgap.local', '$2a$12$i5pRBHCbqnrfCMsXmw6/1e2hz4/FgKWXTsdMV5B5.vpEHxsNwYOTe', TRUE);
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
