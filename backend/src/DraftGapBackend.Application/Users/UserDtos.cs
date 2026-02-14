@@ -1,4 +1,6 @@
-﻿namespace DraftGapBackend.Application.Users;
+﻿using System;
+
+namespace DraftGapBackend.Application.Users;
 
 public class RegisterRequest
 {
@@ -14,7 +16,7 @@ public class LoginRequest
 
 public class AuthResponse
 {
-    public int UserId { get; set; }
+    public Guid UserId { get; set; }
     public string Email { get; set; } = string.Empty;
     public string Message { get; set; } = string.Empty;
 }

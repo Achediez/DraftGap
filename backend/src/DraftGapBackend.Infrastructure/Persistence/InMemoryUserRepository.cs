@@ -14,9 +14,8 @@ namespace DraftGapBackend.Infrastructure.Persistence;
 public class InMemoryUserRepository : IUserRepository
 {
     private readonly List<User> _users = new();
-    private int _nextId = 1;
 
-    public Task<User?> GetByIdAsync(int userId)
+    public Task<User?> GetByIdAsync(Guid userId)
     {
         var user = _users.FirstOrDefault(u => u.UserId == userId);
         return Task.FromResult(user);
@@ -56,7 +55,6 @@ public class InMemoryUserRepository : IUserRepository
 
     public Task<User> CreateAsync(User user)
     {
-        user.UserId = _nextId++;
         user.CreatedAt = DateTime.UtcNow;
         _users.Add(user);
         return Task.FromResult(user);
@@ -77,7 +75,7 @@ public class InMemoryUserRepository : IUserRepository
         return Task.CompletedTask;
     }
 
-    public Task DeleteAsync(int userId)
+    public Task DeleteAsync(Guid userId)
     {
         var user = _users.FirstOrDefault(u => u.UserId == userId);
         if (user != null)

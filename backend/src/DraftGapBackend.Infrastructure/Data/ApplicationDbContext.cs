@@ -1,5 +1,7 @@
 ﻿using DraftGapBackend.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using System;
 using System.Collections.Generic;
 using System.Reflection.Emit;
 
@@ -9,6 +11,8 @@ namespace DraftGapBackend.Infrastructure.Data;
 /// Entity Framework Core database context
 /// Maps C# entities to MySQL tables
 /// </summary>
+///
+
 public class ApplicationDbContext : DbContext
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
@@ -33,14 +37,26 @@ public class ApplicationDbContext : DbContext
         // ====================
         modelBuilder.Entity<User>(entity =>
         {
+            entity.ToTable("users");
+
             entity.HasKey(e => e.UserId);
+
+            entity.Property(e => e.UserId)
+                .HasColumnName("user_id")
+                .HasColumnType("char(36)")
+                .HasConversion(
+                    v => v.ToString("D"),
+                    v => Guid.Parse(v))  // Use Guid.Parse instead of ParseExact
+                .IsRequired();
+
+            entity.Property(e => e.Email).IsRequired();
+
+            entity.Property(e => e.PasswordHash).IsRequired();
+
             entity.HasIndex(e => e.Email).IsUnique();
             entity.HasIndex(e => e.RiotId).IsUnique();
             entity.HasIndex(e => e.RiotPuuid).IsUnique();
             entity.HasIndex(e => e.LastSync);
-
-            entity.Property(e => e.Email).IsRequired();
-            entity.Property(e => e.PasswordHash).IsRequired();
         });
 
         // ====================

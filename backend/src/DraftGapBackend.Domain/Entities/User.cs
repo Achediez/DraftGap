@@ -12,7 +12,7 @@ public class User
 {
     [Key]
     [Column("user_id")]
-    public int UserId { get; set; }
+    public Guid UserId { get; set; } = Guid.NewGuid();
 
     [Required]
     [MaxLength(255)]
