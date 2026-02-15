@@ -7,4 +7,10 @@
   <ItemGroup>
     <ProjectReference Include="..\DraftGapBackend.Domain\DraftGapBackend.Domain.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\DraftGapBackend.Domain\DraftGapBackend.Domain.csproj" />
+	</ItemGroup>
 </Project>

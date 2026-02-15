@@ -1,26 +1,27 @@
-// Interfaz de repositorio de usuarios
-// Define las operaciones de acceso a datos para la entidad User
-using DraftGapBackend.Domain.Users;
-using System.Threading.Tasks;
+using DraftGapBackend.Domain.Entities;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
-namespace DraftGapBackend.Domain.Abstractions
+namespace DraftGapBackend.Domain.Abstractions;
+
+/// <summary>
+/// Repository interface for User entity operations
+/// </summary>
+public interface IUserRepository
 {
-    public interface IUserRepository
-    {
-        // Buscar usuario por id
-        Task<User?> GetByIdAsync(Guid id);
-        // Buscar usuario por email
-        Task<User?> GetByEmailAsync(string email);
-        // Buscar usuario por nombre de usuario
-        Task<User?> GetByUserNameAsync(string userName);
-        // Agregar un nuevo usuario
-        Task AddAsync(User user);
-        // Actualizar usuario
-        Task UpdateAsync(User user);
-        // Obtener todos los usuarios
-        Task<IEnumerable<User>> GetAllAsync();
-        // ...otros métodos necesarios...
-    }
+    // Query operations
+    Task<User?> GetByIdAsync(Guid userId);
+    Task<User?> GetByEmailAsync(string email);
+    Task<User?> GetByRiotIdAsync(string riotId);
+    Task<User?> GetByRiotPuuidAsync(string puuid);
+    Task<IEnumerable<User>> GetAllActiveUsersAsync();
+    Task<IEnumerable<User>> GetUsersRequiringSyncAsync();
+
+    // Command operations
+    Task<User> CreateAsync(User user);
+    Task UpdateAsync(User user);
+    Task DeleteAsync(Guid userId);
+    Task<bool> EmailExistsAsync(string email);
+    Task<bool> RiotIdExistsAsync(string riotId);
 }
