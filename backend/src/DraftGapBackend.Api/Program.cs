@@ -210,11 +210,19 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var startTime = DateTime.UtcNow;
-        await dataDragon.SyncChampionsAsync();
-        var duration = (DateTime.UtcNow - startTime).TotalSeconds;
 
+        // Sync champions
+        await dataDragon.SyncChampionsAsync();
         var championCount = await context.Champions.CountAsync();
-        Console.WriteLine($"   ✅ {championCount} champions ready (took {duration:F2}s)");
+        Console.WriteLine($"   ✅ Champions: {championCount} loaded");
+
+        // Sync items
+        await dataDragon.SyncItemsAsync();
+        var itemCount = await context.Items.CountAsync();
+        Console.WriteLine($"   ✅ Items: {itemCount} loaded");
+
+        var duration = (DateTime.UtcNow - startTime).TotalSeconds;
+        Console.WriteLine($"   📊 Total sync time: {duration:F2}s");
     }
     catch (Exception ex)
     {

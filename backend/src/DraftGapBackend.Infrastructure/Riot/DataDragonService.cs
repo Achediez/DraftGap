@@ -134,11 +134,100 @@ public class DataDragonService : IDataDragonService
             throw;
         }
     }
+
+    /// <summary>
+    /// Synchronizes item data from Data Dragon to local database.
+    /// Process:
+    /// 1. Uses latest patch version from versions API
+    /// 2. Downloads item.json for that version (Spanish locale)
+    /// 3. Checks if items already exist in database
+    /// 4. Parses JSON and inserts item records
+    /// Matches database schema: item_id, item_name, description, gold_cost, image_url, version
+    /// </summary>
+    public async Task SyncItemsAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            // Configure JSON deserialization
+            var jsonOptions = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+
+            // Step 1: Fetch latest game version
+            var versionsJson = await _httpClient.GetStringAsync(LatestVersionUrl, ct);
+            var versions = JsonSerializer.Deserialize<List<string>>(versionsJson, jsonOptions);
+            var latestVersion = versions?.FirstOrDefault() ?? "14.3.1";
+
+            _logger.LogInformation("Fetching item data for patch {Version} (es_ES)", latestVersion);
+
+            // Step 2: Construct URL for Spanish item data
+            var itemsUrl = $"{DdragonBase}/{latestVersion}/data/es_ES/item.json";
+            _logger.LogInformation("Fetching items from: {Url}", itemsUrl);
+
+            var itemsJson = await _httpClient.GetStringAsync(itemsUrl, ct);
+            var response = JsonSerializer.Deserialize<DdragonItemsResponse>(itemsJson, jsonOptions);
+
+            // Step 3: Validate parsed data
+            if (response?.Data == null || response.Data.Count == 0)
+            {
+                _logger.LogWarning("No item data received or parsed from Data Dragon");
+                return;
+            }
+
+            _logger.LogInformation("Successfully parsed {Count} items from Data Dragon", response.Data.Count);
+
+            // Step 4: Check if data already exists to avoid duplicate inserts
+            var existingCount = await _context.Items.CountAsync(ct);
+            if (existingCount > 0)
+            {
+                _logger.LogInformation("Items already exist in database ({Count} records), skipping sync", existingCount);
+                return;
+            }
+
+            // Step 5: Transform Data Dragon DTOs to domain entities
+            // Filter: only numeric item IDs (excludes special items like boots upgrades)
+            var items = response.Data
+                .Where(kvp => int.TryParse(kvp.Key, out _))
+                .Select(kvp => new Item
+                {
+                    item_id = int.Parse(kvp.Key),
+                    item_name = kvp.Value.Name,
+                    description = kvp.Value.Description,
+                    gold_cost = kvp.Value.Gold.Total,
+                    image_url = $"{DdragonBase}/{latestVersion}/img/item/{kvp.Value.Image.Full}",
+                    version = latestVersion
+                }).ToList();
+
+            // Step 6: Persist to database
+            await _context.Items.AddRangeAsync(items, ct);
+            await _context.SaveChangesAsync(ct);
+
+            _logger.LogInformation("Successfully synced {Count} items to database for patch {Version}",
+                items.Count, latestVersion);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "Network error while fetching item data from Data Dragon");
+            throw;
+        }
+        catch (JsonException ex)
+        {
+            _logger.LogError(ex, "Failed to parse Data Dragon item JSON response");
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error during item synchronization");
+            throw;
+        }
+    }
+
 }
 
-// ====================================
-// Data Dragon JSON Response DTOs
-// ====================================
+// ========================================
+// Data Dragon Champions JSON Response DTOs
+// ========================================
 
 /// <summary>
 /// Root response structure from Data Dragon champion.json endpoint.
@@ -223,4 +312,79 @@ public class DdragonImage
     /// </summary>
     [JsonPropertyName("full")]
     public string Full { get; set; } = string.Empty;
+}
+
+// ====================================
+// Data Dragon Items JSON Response DTOs
+// ====================================
+
+/// <summary>
+/// Root response structure from Data Dragon item.json endpoint.
+/// Contains metadata about the data set and a dictionary of all items.
+/// </summary>
+public class DdragonItemsResponse
+{
+    /// <summary>
+    /// Type of data returned. Always "item" for item.json.
+    /// </summary>
+    [JsonPropertyName("type")]
+    public string Type { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Patch version of this data set.
+    /// </summary>
+    [JsonPropertyName("version")]
+    public string Version { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Dictionary of items keyed by item ID as string.
+    /// Example keys: "3078", "3157", "1001"
+    /// </summary>
+    [JsonPropertyName("data")]
+    public Dictionary<string, DdragonItem> Data { get; set; } = new();
+}
+
+/// <summary>
+/// Individual item data structure from Data Dragon.
+/// Contains all metadata needed to display item information.
+/// </summary>
+public class DdragonItem
+{
+    /// <summary>
+    /// Localized item display name.
+    /// Example (es_ES): "Fuerza de trinidad"
+    /// </summary>
+    [JsonPropertyName("name")]
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Full HTML description with item stats and effects.
+    /// </summary>
+    [JsonPropertyName("description")]
+    public string Description { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gold cost information for the item.
+    /// </summary>
+    [JsonPropertyName("gold")]
+    public DdragonItemGold Gold { get; set; } = new();
+
+    /// <summary>
+    /// Image metadata object containing filename for item icon.
+    /// </summary>
+    [JsonPropertyName("image")]
+    public DdragonImage Image { get; set; } = new();
+}
+
+/// <summary>
+/// Gold cost structure for items.
+/// </summary>
+public class DdragonItemGold
+{
+    /// <summary>
+    /// Total gold cost to purchase the item.
+    /// Example: 3333 for Trinity Force
+    /// </summary>
+    [JsonPropertyName("total")]
+    public int Total { get; set; }
 }

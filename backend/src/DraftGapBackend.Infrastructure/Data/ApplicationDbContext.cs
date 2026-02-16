@@ -34,6 +34,13 @@ public class ApplicationDbContext : DbContext
     /// </summary>
     public DbSet<Champion> Champions { get; set; }
 
+    /// <summary>
+    /// Item static data from Data Dragon.
+    /// Contains metadata for all purchasable items in League of Legends.
+    /// </summary>
+    public DbSet<Item> Items { get; set; }
+
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -205,5 +212,39 @@ public class ApplicationDbContext : DbContext
             // Index for fast lookups by champion_key
             entity.HasIndex(e => e.champion_key);
         });
+
+        // ====================
+        // Item Entity Configuration
+        // ====================
+        modelBuilder.Entity<Item>(entity =>
+        {
+            // Explicitly map to items table
+            entity.ToTable("items");
+
+            // Primary key configuration
+            entity.HasKey(e => e.item_id);
+
+            // Column mappings with constraints
+            entity.Property(e => e.item_name)
+                  .IsRequired()
+                  .HasMaxLength(100);
+
+            entity.Property(e => e.description)
+                  .HasColumnType("text");
+
+            entity.Property(e => e.gold_cost)
+                  .HasDefaultValue(0);
+
+            entity.Property(e => e.image_url)
+                  .HasMaxLength(255);
+
+            entity.Property(e => e.version)
+                  .IsRequired()
+                  .HasMaxLength(20);
+
+            // Index for fast lookups by item name
+            entity.HasIndex(e => e.item_name);
+        });
+
     }
 }

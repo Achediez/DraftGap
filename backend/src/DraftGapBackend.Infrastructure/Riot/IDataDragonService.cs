@@ -19,4 +19,5 @@ public interface IDataDragonService
     /// <param name="ct">Cancellation token for async operation control.</param>
     /// <returns>Task representing the asynchronous sync operation.</returns>
     Task SyncChampionsAsync(CancellationToken ct = default);
+    Task SyncItemsAsync(CancellationToken ct = default);
 }
