@@ -28,6 +28,12 @@ public class ApplicationDbContext : DbContext
     public DbSet<PlayerRankedStat> PlayerRankedStats { get; set; }
     public DbSet<SyncJob> SyncJobs { get; set; }
 
+    /// <summary>
+    /// Champion static data from Data Dragon.
+    /// Contains metadata for all League of Legends champions.
+    /// </summary>
+    public DbSet<Champion> Champions { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -164,6 +170,40 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Puuid).IsRequired();
             entity.Property(e => e.JobType).IsRequired();
             entity.Property(e => e.Status).IsRequired();
+        });
+
+        // ====================
+        // Champion Entity Configuration
+        // ====================
+        modelBuilder.Entity<Champion>(entity =>
+        {
+            // Explicitly map to champions table
+            entity.ToTable("champions");
+
+            // Primary key configuration
+            entity.HasKey(e => e.champion_id);
+
+            // Column mappings with constraints
+            entity.Property(e => e.champion_key)
+                  .IsRequired()
+                  .HasMaxLength(50);
+
+            entity.Property(e => e.champion_name)
+                  .IsRequired()
+                  .HasMaxLength(100);
+
+            entity.Property(e => e.title)
+                  .HasMaxLength(100);
+
+            entity.Property(e => e.image_url)
+                  .HasMaxLength(255);
+
+            entity.Property(e => e.version)
+                  .IsRequired()
+                  .HasMaxLength(20);
+
+            // Index for fast lookups by champion_key
+            entity.HasIndex(e => e.champion_key);
         });
     }
 }
