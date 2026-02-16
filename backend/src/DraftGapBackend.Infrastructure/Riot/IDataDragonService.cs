@@ -20,4 +20,5 @@ public interface IDataDragonService
     /// <returns>Task representing the asynchronous sync operation.</returns>
     Task SyncChampionsAsync(CancellationToken ct = default);
     Task SyncItemsAsync(CancellationToken ct = default);
+    Task SyncSummonerSpellsAsync(CancellationToken ct = default);
 }

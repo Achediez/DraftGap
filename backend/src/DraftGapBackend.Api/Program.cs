@@ -221,6 +221,11 @@ using (var scope = app.Services.CreateScope())
         var itemCount = await context.Items.CountAsync();
         Console.WriteLine($"   ✅ Items: {itemCount} loaded");
 
+        // Sync summoner spells
+        await dataDragon.SyncSummonerSpellsAsync();
+        var spellCount = await context.SummonerSpells.CountAsync();
+        Console.WriteLine($"   ✅ Summoner Spells: {spellCount} loaded");
+
         var duration = (DateTime.UtcNow - startTime).TotalSeconds;
         Console.WriteLine($"   📊 Total sync time: {duration:F2}s");
     }
@@ -229,6 +234,7 @@ using (var scope = app.Services.CreateScope())
         Console.WriteLine($"   ⚠️  Static data sync failed: {ex.Message}");
         logger.LogWarning(ex, "Data Dragon sync failed - application will continue with limited functionality");
     }
+
 }
 
 Console.WriteLine();

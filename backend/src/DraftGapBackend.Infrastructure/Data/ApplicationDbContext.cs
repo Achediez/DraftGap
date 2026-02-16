@@ -40,6 +40,11 @@ public class ApplicationDbContext : DbContext
     /// </summary>
     public DbSet<Item> Items { get; set; }
 
+    /// <summary>
+    /// Summoner spell static data from Data Dragon.
+    /// Contains metadata for all summoner spells (Flash, Ignite, Teleport, etc.).
+    /// </summary>
+    public DbSet<SummonerSpell> SummonerSpells { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -244,6 +249,42 @@ public class ApplicationDbContext : DbContext
 
             // Index for fast lookups by item name
             entity.HasIndex(e => e.item_name);
+        });
+
+        // ====================
+        // SummonerSpell Entity Configuration
+        // ====================
+        modelBuilder.Entity<SummonerSpell>(entity =>
+        {
+            // Explicitly map to summoner_spells table
+            entity.ToTable("summoner_spells");
+
+            // Primary key configuration
+            entity.HasKey(e => e.spell_id);
+
+            // Column mappings with constraints
+            entity.Property(e => e.spell_key)
+                  .IsRequired()
+                  .HasMaxLength(50);
+
+            entity.Property(e => e.spell_name)
+                  .IsRequired()
+                  .HasMaxLength(50);
+
+            entity.Property(e => e.description)
+                  .HasColumnType("text");
+
+            entity.Property(e => e.cooldown);
+
+            entity.Property(e => e.image_url)
+                  .HasMaxLength(255);
+
+            entity.Property(e => e.version)
+                  .IsRequired()
+                  .HasMaxLength(20);
+
+            // Index for fast lookups by spell key
+            entity.HasIndex(e => e.spell_key);
         });
 
     }

@@ -223,6 +223,96 @@ public class DataDragonService : IDataDragonService
         }
     }
 
+    /// <summary>
+    /// Synchronizes summoner spell data from Data Dragon to local database.
+    /// Process:
+    /// 1. Uses latest patch version
+    /// 2. Downloads summoner.json (Spanish locale)
+    /// 3. Checks if spells already exist
+    /// 4. Parses and inserts spell records
+    /// Filters out deprecated/unused spells (e.g., old Clairvoyance).
+    /// </summary>
+    public async Task SyncSummonerSpellsAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            var jsonOptions = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+
+            // Step 1: Fetch latest game version
+            var versionsJson = await _httpClient.GetStringAsync(LatestVersionUrl, ct);
+            var versions = JsonSerializer.Deserialize<List<string>>(versionsJson, jsonOptions);
+            var latestVersion = versions?.FirstOrDefault() ?? "14.3.1";
+
+            _logger.LogInformation("Fetching summoner spell data for patch {Version} (es_ES)", latestVersion);
+
+            // Step 2: Construct URL for Spanish summoner spell data
+            var spellsUrl = $"{DdragonBase}/{latestVersion}/data/es_ES/summoner.json";
+            _logger.LogInformation("Fetching summoner spells from: {Url}", spellsUrl);
+
+            var spellsJson = await _httpClient.GetStringAsync(spellsUrl, ct);
+            var response = JsonSerializer.Deserialize<DdragonSummonerSpellsResponse>(spellsJson, jsonOptions);
+
+            // Step 3: Validate parsed data
+            if (response?.Data == null || response.Data.Count == 0)
+            {
+                _logger.LogWarning("No summoner spell data received or parsed from Data Dragon");
+                return;
+            }
+
+            _logger.LogInformation("Successfully parsed {Count} summoner spells from Data Dragon", response.Data.Count);
+
+            // Step 4: Check if data already exists
+            var existingCount = await _context.SummonerSpells.CountAsync(ct);
+            if (existingCount > 0)
+            {
+                _logger.LogInformation("Summoner spells already exist in database ({Count} records), skipping sync",
+                    existingCount);
+                return;
+            }
+
+            // Step 5: Transform DTOs to domain entities
+            // Filter: only spells with valid numeric IDs (excludes deprecated spells)
+            var spells = response.Data.Values
+                .Where(s => int.TryParse(s.Key, out _) && !string.IsNullOrEmpty(s.Name))
+                .Select(s => new SummonerSpell
+                {
+                    spell_id = int.Parse(s.Key),
+                    spell_key = s.Id,
+                    spell_name = s.Name,
+                    description = s.Description,
+                    cooldown = s.Cooldown.Any() ? (int)s.Cooldown.First() : 0,  // Convert double → int, default 0 if empty
+                    image_url = $"{DdragonBase}/{latestVersion}/img/spell/{s.Image.Full}",
+                    version = latestVersion
+                }).ToList();
+
+            // Step 6: Persist to database
+            await _context.SummonerSpells.AddRangeAsync(spells, ct);
+            await _context.SaveChangesAsync(ct);
+
+            _logger.LogInformation("Successfully synced {Count} summoner spells to database for patch {Version}",
+                spells.Count, latestVersion);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "Network error while fetching summoner spell data from Data Dragon");
+            throw;
+        }
+        catch (JsonException ex)
+        {
+            _logger.LogError(ex, "Failed to parse Data Dragon summoner spell JSON response");
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error during summoner spell synchronization");
+            throw;
+        }
+    }
+
+
 }
 
 // ========================================
@@ -387,4 +477,80 @@ public class DdragonItemGold
     /// </summary>
     [JsonPropertyName("total")]
     public int Total { get; set; }
+}
+
+// ====================================
+// Data Dragon Summoner Spells JSON Response DTOs
+// ====================================
+
+/// <summary>
+/// Root response structure from Data Dragon summoner.json endpoint.
+/// Contains metadata and a dictionary of all summoner spells.
+/// </summary>
+public class DdragonSummonerSpellsResponse
+{
+    /// <summary>
+    /// Type of data returned. Always "summoner" for summoner.json.
+    /// </summary>
+    [JsonPropertyName("type")]
+    public string Type { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Patch version of this data set.
+    /// </summary>
+    [JsonPropertyName("version")]
+    public string Version { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Dictionary of summoner spells keyed by spell key.
+    /// Example keys: "SummonerFlash", "SummonerDot", "SummonerTeleport"
+    /// </summary>
+    [JsonPropertyName("data")]
+    public Dictionary<string, DdragonSummonerSpell> Data { get; set; } = new();
+}
+
+/// <summary>
+/// Individual summoner spell data structure from Data Dragon.
+/// </summary>
+public class DdragonSummonerSpell
+{
+    /// <summary>
+    /// Numeric spell ID used by Riot API.
+    /// Example: "4" for Flash, "14" for Ignite
+    /// </summary>
+    [JsonPropertyName("key")]
+    public string Key { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Internal spell identifier.
+    /// Example: "SummonerFlash", "SummonerDot"
+    /// </summary>
+    [JsonPropertyName("id")]
+    public string Id { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Localized spell display name.
+    /// Example (es_ES): "Destello", "Inflamar"
+    /// </summary>
+    [JsonPropertyName("name")]
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Localized spell description.
+    /// </summary>
+    [JsonPropertyName("description")]
+    public string Description { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Spell cooldown in seconds.
+    /// Example: 300 for Flash
+    /// </summary>
+    [JsonPropertyName("cooldown")]
+    public List<double> Cooldown { get; set; } = new();
+
+    /// <summary>
+    /// Image metadata for spell icon.
+    /// </summary>
+    [JsonPropertyName("image")]
+    public DdragonImage Image { get; set; } = new();
 }
