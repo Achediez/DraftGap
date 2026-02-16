@@ -214,19 +214,21 @@ using (var scope = app.Services.CreateScope())
         // Sync champions
         await dataDragon.SyncChampionsAsync();
         var championCount = await context.Champions.CountAsync();
-        Console.WriteLine($"   ✅ Champions: {championCount} loaded");
 
         // Sync items
         await dataDragon.SyncItemsAsync();
         var itemCount = await context.Items.CountAsync();
-        Console.WriteLine($"   ✅ Items: {itemCount} loaded");
 
         // Sync summoner spells
         await dataDragon.SyncSummonerSpellsAsync();
         var spellCount = await context.SummonerSpells.CountAsync();
-        Console.WriteLine($"   ✅ Summoner Spells: {spellCount} loaded");
 
+        // Syncronization duration
         var duration = (DateTime.UtcNow - startTime).TotalSeconds;
+
+        Console.WriteLine($"   ✅ Champions: {championCount} loaded");
+        Console.WriteLine($"   ✅ Items: {itemCount} loaded");
+        Console.WriteLine($"   ✅ Summoner Spells: {spellCount} loaded");
         Console.WriteLine($"   📊 Total sync time: {duration:F2}s");
     }
     catch (Exception ex)
