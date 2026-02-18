@@ -1,8 +1,34 @@
 <div class="dashboard-container">
-  <h1>Bienvenido a DraftGap</h1>
+  <h1>Bienvenido, {{ user.riotId }}</h1>
   <div class="stats-section">
-    <!-- Aquí irán los stats principales, similar a DPM/u.gg/Lolalytics -->
-    <p>Estadísticas principales del usuario y resumen de partidas.</p>
+    <div class="user-info">
+      <div><strong>Email:</strong> {{ user.email }}</div>
+      <div><strong>Región:</strong> {{ user.region }}</div>
+      <div><strong>Rango:</strong> {{ user.rank }}</div>
+      <div><strong>Winrate:</strong> {{ user.winrate }}%</div>
+      <div><strong>Partidas jugadas:</strong> {{ user.games }}</div>
+    </div>
+    <div class="recent-matches">
+      <h3>Partidas recientes</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Campeón</th>
+            <th>Resultado</th>
+            <th>KDA</th>
+            <th>Fecha</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let match of recentMatches">
+            <td>{{ match.champion }}</td>
+            <td>{{ match.result }}</td>
+            <td>{{ match.kda }}</td>
+            <td>{{ match.date }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
   <div *ngIf="isAdmin" class="admin-section">
     <a routerLink="/admin">Ir a panel de administración</a>
