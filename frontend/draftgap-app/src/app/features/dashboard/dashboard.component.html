@@ -1,4 +1,15 @@
 <div class="dashboard-container">
+  <div class="user-menu-bar">
+    <div class="user-menu">
+      <button class="user-menu-btn" aria-label="Opciones de usuario" (click)="toggleMenu()" [attr.aria-expanded]="menuOpen">
+        <img class="user-menu-icon" [src]="user.iconUrl" alt="icono usuario" />
+      </button>
+      <div class="user-menu-dropdown" *ngIf="menuOpen" tabindex="-1">
+        <button class="user-menu-item" (click)="logout($event)">Cerrar sesión</button>
+        <button *ngIf="isAdmin" class="user-menu-item" (click)="goToAdmin($event)">Gestión</button>
+      </div>
+    </div>
+  </div>
   <div class="profile-header">
     <img class="profile-icon" [src]="user.iconUrl" alt="icono perfil" />
     <div class="profile-info">

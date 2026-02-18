@@ -1,5 +1,6 @@
 
-import { Component } from '@angular/core';
+import { Component, ElementRef, HostListener } from '@angular/core';
+import { CommonModule } from '@angular/common';
 
 /**
  * Página principal tras el login/registro.
@@ -8,6 +9,8 @@ import { Component } from '@angular/core';
  */
 @Component({
   selector: 'app-dashboard',
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
@@ -42,7 +45,9 @@ export class DashboardComponent {
     { champion: 'Ahri', championImg: 'https://ddragon.leagueoflegends.com/cdn/13.24.1/img/champion/Ahri.png', result: 'Victoria', kda: '8/2/5', date: '2026-02-15' }
   ];
 
-  constructor() {
+  menuOpen = false;
+
+  constructor(private elRef: ElementRef) {
     // Si no hay token, redirige a login
     if (!localStorage.getItem('draftgap_token')) {
       window.location.href = '/auth';
@@ -50,6 +55,36 @@ export class DashboardComponent {
     }
     // Lee el estado de admin desde localStorage (simulación)
     this.isAdmin = localStorage.getItem('isAdmin') === '1';
+  }
+
+  // Cierra el menú si se hace clic fuera
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    if (!this.elRef.nativeElement.contains(event.target)) {
+      this.menuOpen = false;
+    }
+  }
+
+  toggleMenu() {
+    this.menuOpen = !this.menuOpen;
+  }
+
+  logout(event: Event) {
+    event.stopPropagation();
+    this.menuOpen = false;
+    setTimeout(() => {
+      localStorage.removeItem('draftgap_token');
+      localStorage.removeItem('isAdmin');
+      window.location.href = '/auth';
+    }, 100);
+  }
+
+  goToAdmin(event: Event) {
+    event.stopPropagation();
+    this.menuOpen = false;
+    setTimeout(() => {
+      window.location.href = '/admin';
+    }, 100);
   }
   // TODO: Cargar datos reales del usuario y estadísticas aquí.
 }
