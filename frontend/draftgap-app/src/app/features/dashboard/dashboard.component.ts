@@ -25,13 +25,21 @@ export class DashboardComponent {
     region: 'EUW',
     rank: localStorage.getItem('isAdmin') === '1' ? 'Diamond IV' : 'Gold II',
     winrate: localStorage.getItem('isAdmin') === '1' ? 58 : 51,
-    games: localStorage.getItem('isAdmin') === '1' ? 320 : 120
+    games: localStorage.getItem('isAdmin') === '1' ? 320 : 120,
+    iconUrl: 'https://ddragon.leagueoflegends.com/cdn/13.24.1/img/profileicon/4419.png'
   };
 
+  stats = [
+    { label: 'KDA', value: '4.2', color: '#00bba3' },
+    { label: 'Winrate', value: this.user.winrate + '%', color: '#3fa7ff' },
+    { label: 'Rango', value: this.user.rank, color: '#ffe156' },
+    { label: 'Partidas', value: this.user.games, color: '#ff6f61' }
+  ];
+
   recentMatches = [
-    { champion: 'Jinx', result: 'Victoria', kda: '12/3/8', date: '2026-02-17' },
-    { champion: 'Thresh', result: 'Derrota', kda: '1/7/14', date: '2026-02-16' },
-    { champion: 'Ahri', result: 'Victoria', kda: '8/2/5', date: '2026-02-15' }
+    { champion: 'Jinx', championImg: 'https://ddragon.leagueoflegends.com/cdn/13.24.1/img/champion/Jinx.png', result: 'Victoria', kda: '12/3/8', date: '2026-02-17' },
+    { champion: 'Thresh', championImg: 'https://ddragon.leagueoflegends.com/cdn/13.24.1/img/champion/Thresh.png', result: 'Derrota', kda: '1/7/14', date: '2026-02-16' },
+    { champion: 'Ahri', championImg: 'https://ddragon.leagueoflegends.com/cdn/13.24.1/img/champion/Ahri.png', result: 'Victoria', kda: '8/2/5', date: '2026-02-15' }
   ];
 
   constructor() {

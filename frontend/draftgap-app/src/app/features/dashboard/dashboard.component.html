@@ -1,34 +1,38 @@
 <div class="dashboard-container">
-  <h1>Bienvenido, {{ user.riotId }}</h1>
-  <div class="stats-section">
-    <div class="user-info">
-      <div><strong>Email:</strong> {{ user.email }}</div>
-      <div><strong>Región:</strong> {{ user.region }}</div>
-      <div><strong>Rango:</strong> {{ user.rank }}</div>
-      <div><strong>Winrate:</strong> {{ user.winrate }}%</div>
-      <div><strong>Partidas jugadas:</strong> {{ user.games }}</div>
+  <div class="profile-header">
+    <img class="profile-icon" [src]="user.iconUrl" alt="icono perfil" />
+    <div class="profile-info">
+      <h1>{{ user.riotId }}</h1>
+      <div class="region">{{ user.region }}</div>
+      <div class="email">{{ user.email }}</div>
     </div>
-    <div class="recent-matches">
-      <h3>Partidas recientes</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Campeón</th>
-            <th>Resultado</th>
-            <th>KDA</th>
-            <th>Fecha</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let match of recentMatches">
-            <td>{{ match.champion }}</td>
-            <td>{{ match.result }}</td>
-            <td>{{ match.kda }}</td>
-            <td>{{ match.date }}</td>
-          </tr>
-        </tbody>
-      </table>
+  </div>
+  <div class="stats-cards">
+    <div class="stat-card" *ngFor="let stat of stats" [style.background]="stat.color">
+      <div class="stat-label">{{ stat.label }}</div>
+      <div class="stat-value">{{ stat.value }}</div>
     </div>
+  </div>
+  <div class="recent-matches">
+    <h3>Partidas recientes</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Campeón</th>
+          <th>Resultado</th>
+          <th>KDA</th>
+          <th>Fecha</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let match of recentMatches">
+          <td><img [src]="match.championImg" class="champion-img" alt="{{ match.champion }}" /> {{ match.champion }}</td>
+          <td>{{ match.result }}</td>
+          <td>{{ match.kda }}</td>
+          <td>{{ match.date }}</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
   <div *ngIf="isAdmin" class="admin-section">
     <a routerLink="/admin">Ir a panel de administración</a>

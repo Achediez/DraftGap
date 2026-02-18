@@ -1,18 +1,109 @@
 .dashboard-container {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 2rem;
+  max-width: 950px;
+  margin: 2rem auto;
+  padding: 2.5rem 2rem;
   background: #181a20;
+  color: #e6eaf3;
+  border-radius: 18px;
+  box-shadow: 0 4px 32px rgba(0,0,0,0.25);
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 2.5rem;
+}
+.profile-icon {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  border: 3px solid #3fa7ff;
+  background: #23263a;
+}
+.profile-info h1 {
+  margin: 0;
+  font-size: 2.2rem;
+  color: #3fa7ff;
+}
+.profile-info .region {
+  font-size: 1.1rem;
+  color: #00bba3;
+  margin-bottom: 0.2rem;
+}
+.profile-info .email {
+  font-size: 0.95rem;
+  color: #b0b8c9;
+}
+
+.stats-cards {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+  justify-content: center;
+}
+.stat-card {
+  flex: 1 1 0;
+  min-width: 120px;
+  background: #23263a;
   color: #fff;
   border-radius: 12px;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.2);
+  padding: 1.2rem 0.8rem;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  font-size: 1.1rem;
+  transition: transform 0.15s;
 }
-.stats-section {
-  margin-top: 2rem;
+.stat-card:hover {
+  transform: translateY(-4px) scale(1.04);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.18);
+}
+.stat-label {
+  font-size: 1rem;
+  color: #b0b8c9;
+  margin-bottom: 0.3rem;
+}
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.recent-matches {
   background: #23263a;
-  padding: 1.5rem;
-  border-radius: 8px;
+  border-radius: 10px;
+  padding: 1.5rem 1rem;
+  margin-bottom: 2rem;
 }
+.recent-matches h3 {
+  color: #3fa7ff;
+  margin-bottom: 1rem;
+}
+.recent-matches table {
+  width: 100%;
+  border-collapse: collapse;
+  color: #e6eaf3;
+}
+.recent-matches th, .recent-matches td {
+  padding: 0.6rem 0.4rem;
+  text-align: left;
+}
+.recent-matches th {
+  color: #00bba3;
+  font-weight: 600;
+  border-bottom: 2px solid #3fa7ff;
+}
+.recent-matches tr {
+  border-bottom: 1px solid #23263a;
+}
+.champion-img {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+  border: 2px solid #3fa7ff;
+}
+
 .admin-section {
   margin-top: 2rem;
   text-align: right;
@@ -21,6 +112,7 @@
   color: #00bba3;
   font-weight: bold;
   text-decoration: none;
+  font-size: 1.1rem;
 }
 .admin-section a:hover {
   text-decoration: underline;
