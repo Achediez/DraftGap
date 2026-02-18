@@ -3,7 +3,9 @@ import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { finalize } from 'rxjs';
-import { AuthService } from '../../services/auth.service';
+import { Router } from '@angular/router';
+// import { AuthService } from '../../services/auth.service';
+import { MockAuthService } from '../../services/mock-auth.service';
 
 @Component({
   selector: 'app-auth-page',
@@ -22,7 +24,9 @@ export class AuthPageComponent {
 
   // Dependency injection using signals-friendly API.
   private readonly fb = inject(FormBuilder);
-  private readonly authService = inject(AuthService);
+  // Sustituye AuthService por MockAuthService para pruebas sin backend
+  private readonly authService = inject(MockAuthService);
+  private readonly router = inject(Router);
 
   // Reactive form for login.
   readonly loginForm = this.fb.group({
@@ -79,6 +83,11 @@ export class AuthPageComponent {
       .subscribe({
         next: (response) => {
           this.successMessage.set(`Bienvenido ${response.email}`);
+          // Guardar token y si es admin en localStorage para el dashboard
+          localStorage.setItem('draftgap_token', response.token);
+          localStorage.setItem('isAdmin', response.isAdmin ? '1' : '0');
+          // Redirigir al dashboard
+          this.router.navigate(['/dashboard']);
         },
         error: (error) => {
           this.errorMessage.set(this.mapError(error));
