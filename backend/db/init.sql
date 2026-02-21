@@ -276,7 +276,11 @@ CREATE TABLE `sync_jobs` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================================================
+<<<<<<< HEAD
 -- Static Data Cache (Optional)
+=======
+-- Static Data Cache (Typically populated from Riot Data Dragon)
+>>>>>>> main
 -- =====================================================
 
 CREATE TABLE `champions` (
@@ -292,7 +296,11 @@ CREATE TABLE `champions` (
 
 CREATE TABLE `items` (
   `item_id` INT NOT NULL,
+<<<<<<< HEAD
   `item_name` VARCHAR(300) NOT NULL,
+=======
+  `item_name` VARCHAR(100) NOT NULL,
+>>>>>>> main
   `description` TEXT NULL,
   `gold_cost` INT NULL,
   `image_url` VARCHAR(255) NULL,
@@ -300,6 +308,7 @@ CREATE TABLE `items` (
   PRIMARY KEY (`item_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+<<<<<<< HEAD
 CREATE TABLE `summoner_spells` (
   `spell_id` INT NOT NULL,
   `spell_key` VARCHAR(50) NOT NULL,
@@ -312,6 +321,34 @@ CREATE TABLE `summoner_spells` (
   INDEX `idx_spell_key` (`spell_key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+=======
+-- Rune path (Precision, Domination, Sorcery, Resolve, Inspiration)
+CREATE TABLE `rune_paths` (
+  `path_id`   INT NOT NULL,
+  `path_key`  VARCHAR(50) NOT NULL,
+  `path_name` VARCHAR(50) NOT NULL,
+  `image_url` VARCHAR(255) NULL,
+  `version`   VARCHAR(20) NOT NULL,
+  PRIMARY KEY (`path_id`),
+  INDEX `idx_path_key` (`path_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Individual runes within each path
+CREATE TABLE `runes` (
+  `rune_id`    INT NOT NULL,
+  `path_id`    INT NOT NULL,
+  `slot`       INT NOT NULL,
+  `rune_key`   VARCHAR(100) NOT NULL,
+  `rune_name`  VARCHAR(100) NOT NULL,
+  `short_desc` TEXT NULL,
+  `image_url`  VARCHAR(255) NULL,
+  `version`    VARCHAR(20) NOT NULL,
+  PRIMARY KEY (`rune_id`),
+  INDEX `idx_path_slot` (`path_id`, `slot`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+>>>>>>> main
 -- =====================================================
 -- FOREIGN KEYS (all in one place)
 -- =====================================================
@@ -366,6 +403,15 @@ ALTER TABLE `sync_jobs`
   FOREIGN KEY (`puuid`) REFERENCES `players` (`puuid`)
   ON DELETE CASCADE ON UPDATE CASCADE;
 
+<<<<<<< HEAD
+=======
+-- Static Data Cache (Typically populated from Riot Data Dragon)
+ALTER TABLE `runes`
+  ADD CONSTRAINT `fk_runes_rune_paths`
+  FOREIGN KEY (`path_id`) REFERENCES `rune_paths` (`path_id`)
+  ON DELETE CASCADE ON UPDATE CASCADE;
+
+>>>>>>> main
 -- =====================================================
 -- Stored Procedures for Aggregation
 -- =====================================================

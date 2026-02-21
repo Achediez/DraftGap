@@ -417,4 +417,9 @@ FodyWeavers.xsd
 *.msm
 *.msp
 
+<<<<<<< HEAD
 claves/
+=======
+# Claves
+claves.json
+>>>>>>> main

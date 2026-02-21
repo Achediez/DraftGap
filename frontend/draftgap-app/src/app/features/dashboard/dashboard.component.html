@@ -1,0 +1,51 @@
+<div class="dashboard-container">
+  <div class="user-menu-bar">
+    <div class="user-menu">
+      <button class="user-menu-btn" aria-label="Opciones de usuario" (click)="toggleMenu()" [attr.aria-expanded]="menuOpen">
+        <img class="user-menu-icon" [src]="user.iconUrl" alt="icono usuario" />
+      </button>
+      <div class="user-menu-dropdown" *ngIf="menuOpen" tabindex="-1">
+        <button class="user-menu-item" (click)="logout($event)">Cerrar sesión</button>
+        <button *ngIf="isAdmin" class="user-menu-item" (click)="goToAdmin($event)">Gestión</button>
+      </div>
+    </div>
+  </div>
+  <div class="profile-header">
+    <img class="profile-icon" [src]="user.iconUrl" alt="icono perfil" />
+    <div class="profile-info">
+      <h1>{{ user.riotId }}</h1>
+      <div class="region">{{ user.region }}</div>
+      <div class="email">{{ user.email }}</div>
+    </div>
+  </div>
+  <div class="stats-cards">
+    <div class="stat-card" *ngFor="let stat of stats" [style.background]="stat.color">
+      <div class="stat-label">{{ stat.label }}</div>
+      <div class="stat-value">{{ stat.value }}</div>
+    </div>
+  </div>
+  <div class="recent-matches">
+    <h3>Partidas recientes</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Campeón</th>
+          <th>Resultado</th>
+          <th>KDA</th>
+          <th>Fecha</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let match of recentMatches">
+          <td><img [src]="match.championImg" class="champion-img" alt="{{ match.champion }}" /> {{ match.champion }}</td>
+          <td>{{ match.result }}</td>
+          <td>{{ match.kda }}</td>
+          <td>{{ match.date }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div *ngIf="isAdmin" class="admin-section">
+    <a routerLink="/admin">Ir a panel de administración</a>
+  </div>
+</div>
