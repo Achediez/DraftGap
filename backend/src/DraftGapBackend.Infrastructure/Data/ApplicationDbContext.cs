@@ -65,6 +65,19 @@ public class ApplicationDbContext : DbContext
     /// </summary>
     public DbSet<SummonerSpell> SummonerSpells { get; set; }
 
+    /// <summary>
+    /// Rune path static data from Data Dragon.
+    /// Contains the 5 rune trees (Precision, Domination, Sorcery, Resolve, Inspiration).
+    /// </summary>
+    public DbSet<RunePath> RunePaths { get; set; }
+
+    /// <summary>
+    /// Individual rune static data from Data Dragon.
+    /// Contains keystones and minor runes belonging to each rune path.
+    /// </summary>
+    public DbSet<Rune> Runes { get; set; }
+
+
     // ====================================
     // Model Configuration
     // ====================================

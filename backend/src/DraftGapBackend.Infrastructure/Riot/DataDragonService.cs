@@ -312,6 +312,119 @@ public class DataDragonService : IDataDragonService
         }
     }
 
+    /// <summary>
+    /// Synchronizes rune path and rune data from Data Dragon to local database.
+    /// Process:
+    /// 1. Fetches latest patch version
+    /// 2. Downloads runesReforged.json (Spanish locale)
+    /// 3. Inserts rune paths first (parent records)
+    /// 4. Inserts individual runes with slot positions (child records)
+    /// Parent records must be inserted before children to satisfy FK constraint.
+    /// </summary>
+    public async Task SyncRunesAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            var jsonOptions = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+
+            // Step 1: Fetch latest game version
+            var versionsJson = await _httpClient.GetStringAsync(LatestVersionUrl, ct);
+            var versions = JsonSerializer.Deserialize<List<string>>(versionsJson, jsonOptions);
+            var latestVersion = versions?.FirstOrDefault() ?? "14.3.1";
+
+            _logger.LogInformation("Fetching rune data for patch {Version} (es_ES)", latestVersion);
+
+            // Step 2: Construct URL for Spanish rune data
+            // Note: runesReforged.json uses a flat array structure, different from champion/item JSON
+            var runesUrl = $"{DdragonBase}/{latestVersion}/data/es_ES/runesReforged.json";
+            _logger.LogInformation("Fetching runes from: {Url}", runesUrl);
+
+            var runesJson = await _httpClient.GetStringAsync(runesUrl, ct);
+            var runePaths = JsonSerializer.Deserialize<List<DdragonRunePath>>(runesJson, jsonOptions);
+
+            // Step 3: Validate parsed data
+            if (runePaths == null || runePaths.Count == 0)
+            {
+                _logger.LogWarning("No rune data received or parsed from Data Dragon");
+                return;
+            }
+
+            _logger.LogInformation("Successfully parsed {Count} rune paths from Data Dragon", runePaths.Count);
+
+            // Step 4: Check if data already exists
+            var existingCount = await _context.RunePaths.CountAsync(ct);
+            if (existingCount > 0)
+            {
+                _logger.LogInformation("Rune paths already exist in database ({Count} records), skipping sync",
+                    existingCount);
+                return;
+            }
+
+            // Step 5: Insert rune paths first (parent records required before children)
+            var pathEntities = runePaths.Select(p => new RunePath
+            {
+                path_id = p.Id,
+                path_key = p.Key,
+                path_name = p.Name,
+                image_url = $"https://ddragon.leagueoflegends.com/cdn/img/{p.Icon}",
+                version = latestVersion
+            }).ToList();
+
+            await _context.RunePaths.AddRangeAsync(pathEntities, ct);
+            await _context.SaveChangesAsync(ct);
+
+            _logger.LogInformation("Inserted {Count} rune paths", pathEntities.Count);
+
+            // Step 6: Insert individual runes (child records)
+            // Iterate paths → slots → runes to assign correct path_id and slot index
+            var runeEntities = new List<Rune>();
+
+            foreach (var path in runePaths)
+            {
+                for (int slotIndex = 0; slotIndex < path.Slots.Count; slotIndex++)
+                {
+                    foreach (var rune in path.Slots[slotIndex].Runes)
+                    {
+                        runeEntities.Add(new Rune
+                        {
+                            rune_id = rune.Id,
+                            path_id = path.Id,
+                            slot = slotIndex,
+                            rune_key = rune.Key,
+                            rune_name = rune.Name,
+                            short_desc = rune.ShortDesc,
+                            image_url = $"https://ddragon.leagueoflegends.com/cdn/img/{rune.Icon}",
+                            version = latestVersion
+                        });
+                    }
+                }
+            }
+
+            await _context.Runes.AddRangeAsync(runeEntities, ct);
+            await _context.SaveChangesAsync(ct);
+
+            _logger.LogInformation("Successfully synced {PathCount} rune paths and {RuneCount} runes for patch {Version}",
+                pathEntities.Count, runeEntities.Count, latestVersion);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "Network error while fetching rune data from Data Dragon");
+            throw;
+        }
+        catch (JsonException ex)
+        {
+            _logger.LogError(ex, "Failed to parse Data Dragon rune JSON response");
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error during rune synchronization");
+            throw;
+        }
+    }
 
 }
 
@@ -553,4 +666,105 @@ public class DdragonSummonerSpell
     /// </summary>
     [JsonPropertyName("image")]
     public DdragonImage Image { get; set; } = new();
+}
+
+// ====================================
+// Data Dragon Runes JSON Response DTOs
+// ====================================
+
+/// <summary>
+/// Root response structure for a single rune path from Data Dragon runesReforged.json.
+/// Data Dragon returns rune data as a flat array of paths, each containing slots with runes.
+/// </summary>
+public class DdragonRunePath
+{
+    /// <summary>
+    /// Riot's numeric identifier for the rune path.
+    /// Example: 8000 for Precision, 8100 for Domination.
+    /// </summary>
+    [JsonPropertyName("id")]
+    public int Id { get; set; }
+
+    /// <summary>
+    /// Internal key for the rune path.
+    /// Example: "Precision", "Domination"
+    /// </summary>
+    [JsonPropertyName("key")]
+    public string Key { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Relative path to the rune path icon.
+    /// Example: "perk-images/Styles/Precision.png"
+    /// Must be prefixed with Data Dragon CDN base to form full URL.
+    /// </summary>
+    [JsonPropertyName("icon")]
+    public string Icon { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Localized display name of the rune path.
+    /// Example (es_ES): "Precisión", "Dominación"
+    /// </summary>
+    [JsonPropertyName("name")]
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Array of slot groups, each containing the runes available in that slot.
+    /// Index 0 = Keystone slot, Index 1-3 = Minor rune slots.
+    /// </summary>
+    [JsonPropertyName("slots")]
+    public List<DdragonRuneSlot> Slots { get; set; } = new();
+}
+
+/// <summary>
+/// Represents a single slot within a rune path.
+/// Contains all rune options available for that slot position.
+/// </summary>
+public class DdragonRuneSlot
+{
+    /// <summary>
+    /// Array of runes available in this slot.
+    /// Players choose one rune per slot when building their rune page.
+    /// </summary>
+    [JsonPropertyName("runes")]
+    public List<DdragonRune> Runes { get; set; } = new();
+}
+
+/// <summary>
+/// Individual rune data structure from Data Dragon.
+/// </summary>
+public class DdragonRune
+{
+    /// <summary>
+    /// Riot's unique numeric identifier for the rune.
+    /// Example: 8010 for Conqueror, 8008 for Lethal Tempo.
+    /// </summary>
+    [JsonPropertyName("id")]
+    public int Id { get; set; }
+
+    /// <summary>
+    /// Internal key identifier for the rune.
+    /// Example: "Conqueror", "LethalTempo"
+    /// </summary>
+    [JsonPropertyName("key")]
+    public string Key { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Relative path to the rune icon image.
+    /// Example: "perk-images/Styles/Precision/Conqueror/Conqueror.png"
+    /// </summary>
+    [JsonPropertyName("icon")]
+    public string Icon { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Localized rune display name.
+    /// Example (es_ES): "Conquistador", "Tempo Letal"
+    /// </summary>
+    [JsonPropertyName("name")]
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Short localized description of the rune effect.
+    /// </summary>
+    [JsonPropertyName("shortDesc")]
+    public string ShortDesc { get; set; } = string.Empty;
 }

@@ -21,4 +21,15 @@ public interface IDataDragonService
     Task SyncChampionsAsync(CancellationToken ct = default);
     Task SyncItemsAsync(CancellationToken ct = default);
     Task SyncSummonerSpellsAsync(CancellationToken ct = default);
+
+    /// <summary>
+    /// Fetches all rune path and rune data from Data Dragon and stores it in the database.
+    /// This operation is idempotent - if rune paths already exist, sync is skipped.
+    /// Inserts rune paths first, then individual runes to satisfy the FK constraint.
+    /// Data is fetched in Spanish (es_ES) locale.
+    /// </summary>
+    /// <param name="ct">Cancellation token for async operation control.</param>
+    /// <returns>Task representing the asynchronous sync operation.</returns>
+    Task SyncRunesAsync(CancellationToken ct = default);
+
 }

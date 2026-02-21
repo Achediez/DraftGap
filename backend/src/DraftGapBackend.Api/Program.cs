@@ -211,24 +211,26 @@ using (var scope = app.Services.CreateScope())
     {
         var startTime = DateTime.UtcNow;
 
-        // Sync champions
         await dataDragon.SyncChampionsAsync();
         var championCount = await context.Champions.CountAsync();
 
-        // Sync items
         await dataDragon.SyncItemsAsync();
         var itemCount = await context.Items.CountAsync();
 
-        // Sync summoner spells
         await dataDragon.SyncSummonerSpellsAsync();
         var spellCount = await context.SummonerSpells.CountAsync();
 
-        // Syncronization duration
+        await dataDragon.SyncRunesAsync();
+        var pathCount = await context.RunePaths.CountAsync();
+        var runeCount = await context.Runes.CountAsync();
+
         var duration = (DateTime.UtcNow - startTime).TotalSeconds;
 
-        Console.WriteLine($"   ✅ Champions: {championCount} loaded");
-        Console.WriteLine($"   ✅ Items: {itemCount} loaded");
+        Console.WriteLine($"   ✅ Champions:       {championCount} loaded");
+        Console.WriteLine($"   ✅ Items:           {itemCount} loaded");
         Console.WriteLine($"   ✅ Summoner Spells: {spellCount} loaded");
+        Console.WriteLine($"   ✅ Rune Paths:      {pathCount} loaded");
+        Console.WriteLine($"   ✅ Runes:           {runeCount} loaded");
         Console.WriteLine($"   📊 Total sync time: {duration:F2}s");
     }
     catch (Exception ex)
@@ -236,6 +238,7 @@ using (var scope = app.Services.CreateScope())
         Console.WriteLine($"   ⚠️  Static data sync failed: {ex.Message}");
         logger.LogWarning(ex, "Data Dragon sync failed - application will continue with limited functionality");
     }
+
 
 }
 
