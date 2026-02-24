@@ -1,29 +1,17 @@
-// Define los modelos de request y la interfaz de servicio de usuario
-// Casos de uso de aplicación: registro y login
-using DraftGapBackend.Domain.Users;
+using DraftGapBackend.Domain.Entities;
+using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace DraftGapBackend.Application.Users
+namespace DraftGapBackend.Application.Users;
+
+public interface IUserService
 {
-    // Modelo para registrar usuario
-    public class RegisterUserRequest
-    {
-        public string Email { get; set; }
-        public string UserName { get; set; }
-        public string Password { get; set; }
-    }
-
-    // Modelo para login de usuario
-    public class LoginUserRequest
-    {
-        public string EmailOrUserName { get; set; }
-        public string Password { get; set; }
-    }
-
-    // Interfaz de servicio de usuario: define los casos de uso
-    public interface IUserService
-    {
-        Task<User> RegisterAsync(RegisterUserRequest request);
-        Task<User?> LoginAsync(LoginUserRequest request);
-    }
+    Task<AuthResponse> RegisterAsync(RegisterRequest request);
+    Task<AuthResponse> LoginAsync(LoginRequest request);
+    Task<User?> GetUserByIdAsync(Guid userId);
+    Task<User?> GetUserByEmailAsync(string email);
+    Task<User?> GetUserByRiotIdAsync(string riotId);
+    Task<IEnumerable<User>> GetAllActiveUsersAsync();
+    Task UpdateUserAsync(User user);
 }

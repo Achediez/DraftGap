@@ -1,23 +1,41 @@
-// Configuración de inyección de dependencias para la infraestructura
-// Registra los servicios y repositorios concretos en el contenedor DI
-using Microsoft.Extensions.DependencyInjection;
-using DraftGapBackend.Application.Users;
+using DraftGapBackend.Application.Interfaces;
 using DraftGapBackend.Domain.Abstractions;
 using DraftGapBackend.Infrastructure.Persistence;
+using DraftGapBackend.Infrastructure.Riot;
+using DraftGapBackend.Infrastructure.Sync;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using System;
 
-namespace DraftGapBackend.Infrastructure
+namespace DraftGapBackend.Infrastructure;
+
+public static class DependencyInjection
 {
-    public static class DependencyInjection
+    public static IServiceCollection AddInfrastructure(
+        this IServiceCollection services,
+        IConfiguration configuration)
     {
-        // Método de extensión para registrar servicios de infraestructura
-        public static IServiceCollection AddInfrastructure(this IServiceCollection services)
+        // Repository layer â€” scoped per HTTP request.
+        services.AddScoped<IUserRepository, UserRepository>();
+
+        // Riot API HTTP client with base timeout.
+        services.AddHttpClient<IRiotService, RiotService>(client =>
         {
-            // Cambiado a Singleton para que la lista de usuarios se comparta entre peticiones
-            services.AddSingleton<IUserRepository, InMemoryUserRepository>();
-            // Servicio de usuario de aplicación
-            services.AddScoped<IUserService, UserService>();
-            // ...otros servicios...
-            return services;
-        }
+            client.Timeout = TimeSpan.FromSeconds(30);
+            client.DefaultRequestHeaders.Add("User-Agent", "DraftGap/1.0");
+        });
+
+        // Riot service â€” scoped so it shares the HTTP request lifetime.
+        services.AddScoped<IRiotService, RiotService>();
+
+        // Data sync service â€” scoped because it uses ApplicationDbContext which is also scoped.
+        services.AddScoped<IDataSyncService, DataSyncService>();
+
+        // Background worker â€” singleton lifetime managed by the host.
+        // Creates its own DI scope internally when processing jobs to safely
+        // resolve scoped services (ApplicationDbContext, IDataSyncService).
+        services.AddHostedService<RiotSyncBackgroundService>();
+
+        return services;
     }
 }

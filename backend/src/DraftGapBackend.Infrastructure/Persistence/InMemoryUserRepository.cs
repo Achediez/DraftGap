@@ -1,24 +1,99 @@
-// Implementación en memoria del repositorio de usuarios
-// Guarda los usuarios en una lista local (solo para pruebas/desarrollo)
+using DraftGapBackend.Domain.Abstractions;
+using DraftGapBackend.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using DraftGapBackend.Domain.Abstractions;
-using DraftGapBackend.Domain.Users;
 
-namespace DraftGapBackend.Infrastructure.Persistence
+namespace DraftGapBackend.Infrastructure.Persistence;
+
+/// <summary>
+/// In-memory implementation of IUserRepository for testing
+/// Use Entity Framework repository in production
+/// </summary>
+public class InMemoryUserRepository : IUserRepository
 {
-    public class InMemoryUserRepository : IUserRepository
+    private readonly List<User> _users = new();
+
+    public Task<User?> GetByIdAsync(Guid userId)
     {
-        private readonly List<User> _users = new(); // Almacenamiento en memoria
-        // Busca usuario por email
-        public Task<User?> GetByEmailAsync(string email) => Task.FromResult(_users.FirstOrDefault(u => u.Email == email));
-        // Busca usuario por nombre de usuario
-        public Task<User?> GetByUserNameAsync(string userName) => Task.FromResult(_users.FirstOrDefault(u => u.UserName == userName));
-        // Agrega un usuario a la lista
-        public Task AddAsync(User user) { _users.Add(user); return Task.CompletedTask; }
-        // Método auxiliar para depuración: obtener todos los usuarios
-        public List<User> GetAllUsers() => _users;
+        var user = _users.FirstOrDefault(u => u.UserId == userId);
+        return Task.FromResult(user);
+    }
+
+    public Task<User?> GetByEmailAsync(string email)
+    {
+        var user = _users.FirstOrDefault(u => u.Email == email);
+        return Task.FromResult(user);
+    }
+
+    public Task<User?> GetByRiotIdAsync(string riotId)
+    {
+        var user = _users.FirstOrDefault(u => u.RiotId == riotId);
+        return Task.FromResult(user);
+    }
+
+    public Task<User?> GetByRiotPuuidAsync(string puuid)
+    {
+        var user = _users.FirstOrDefault(u => u.RiotPuuid == puuid);
+        return Task.FromResult(user);
+    }
+
+    public Task<IEnumerable<User>> GetAllActiveUsersAsync()
+    {
+        var users = _users.Where(u => u.IsActive).ToList();
+        return Task.FromResult<IEnumerable<User>>(users);
+    }
+
+    public Task<IEnumerable<User>> GetUsersRequiringSyncAsync()
+    {
+        var users = _users
+            .Where(u => u.IsActive && (u.LastSync == null || u.LastSync < DateTime.UtcNow.AddHours(-24)))
+            .ToList();
+        return Task.FromResult<IEnumerable<User>>(users);
+    }
+
+    public Task<User> CreateAsync(User user)
+    {
+        user.CreatedAt = DateTime.UtcNow;
+        _users.Add(user);
+        return Task.FromResult(user);
+    }
+
+    public Task UpdateAsync(User user)
+    {
+        var existing = _users.FirstOrDefault(u => u.UserId == user.UserId);
+        if (existing != null)
+        {
+            existing.Email = user.Email;
+            existing.PasswordHash = user.PasswordHash;
+            existing.RiotId = user.RiotId;
+            existing.RiotPuuid = user.RiotPuuid;
+            existing.LastSync = user.LastSync;
+            existing.IsActive = user.IsActive;
+        }
+        return Task.CompletedTask;
+    }
+
+    public Task DeleteAsync(Guid userId)
+    {
+        var user = _users.FirstOrDefault(u => u.UserId == userId);
+        if (user != null)
+        {
+            _users.Remove(user);
+        }
+        return Task.CompletedTask;
+    }
+
+    public Task<bool> EmailExistsAsync(string email)
+    {
+        var exists = _users.Any(u => u.Email == email);
+        return Task.FromResult(exists);
+    }
+
+    public Task<bool> RiotIdExistsAsync(string riotId)
+    {
+        var exists = _users.Any(u => u.RiotId == riotId);
+        return Task.FromResult(exists);
     }
 }

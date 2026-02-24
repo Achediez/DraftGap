@@ -1,0 +1,198 @@
+using DraftGapBackend.Application.Interfaces;
+using DraftGapBackend.Domain.Abstractions;
+using DraftGapBackend.Infrastructure.Data;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+
+namespace DraftGapBackend.API.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+[Authorize(Roles = "Admin")]
+public class AdminController : ControllerBase
+{
+    private readonly IDataSyncService _dataSyncService;
+    private readonly IUserRepository _userRepository;
+    private readonly ApplicationDbContext _context;
+    private readonly ILogger<AdminController> _logger;
+
+    public AdminController(
+        IDataSyncService dataSyncService,
+        IUserRepository userRepository,
+        ApplicationDbContext context,
+        ILogger<AdminController> logger)
+    {
+        _dataSyncService = dataSyncService;
+        _userRepository = userRepository;
+        _context = context;
+        _logger = logger;
+    }
+
+    /// <summary>
+    /// Enqueues sync jobs for all active users or a specific subset via UserIds.
+    /// The background worker picks up PENDING jobs automatically.
+    /// </summary>
+    [HttpPost("sync")]
+    public async Task<IActionResult> TriggerSync([FromBody] SyncRequest request)
+    {
+        try
+        {
+            _logger.LogInformation(
+                "Admin triggered sync. SyncType={SyncType}, ForceRefresh={ForceRefresh}",
+                request.SyncType, request.ForceRefresh);
+
+            SyncTriggerResult result;
+
+            if (request.UserIds != null && request.UserIds.Count > 0)
+            {
+                // Targeted sync: enqueue only the specified users.
+                var jobs = new List<DraftGapBackend.Domain.Entities.SyncJob>();
+                foreach (var userId in request.UserIds)
+                {
+                    var job = await _dataSyncService.TriggerSyncForUserAsync(userId);
+                    jobs.Add(job);
+                }
+
+                result = new SyncTriggerResult(
+                    jobs.Count,
+                    $"Created {jobs.Count} sync jobs for specified users.",
+                    jobs.AsReadOnly()
+                );
+            }
+            else
+            {
+                // Bulk sync: enqueue all eligible active users.
+                result = await _dataSyncService.TriggerSyncForAllUsersAsync();
+            }
+
+            return Ok(new
+            {
+                jobsCreated = result.JobsCreated,
+                message = result.Message,
+                jobs = result.Jobs.Select(j => new
+                {
+                    jobId = j.JobId,
+                    userId = j.Puuid,
+                    jobType = j.JobType,
+                    status = j.Status,
+                    createdAt = j.CreatedAt
+                })
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning("Sync trigger rejected: {Error}", ex.Message);
+            return BadRequest(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Sync trigger failed unexpectedly.");
+            return StatusCode(500, new { error = "Failed to trigger sync." });
+        }
+    }
+
+    /// <summary>
+    /// Returns aggregate counts of sync jobs by status, plus the last completion timestamp.
+    /// </summary>
+    [HttpGet("sync/status")]
+    public async Task<IActionResult> GetSyncStatus()
+    {
+        try
+        {
+            var status = await _dataSyncService.GetSyncStatusAsync();
+
+            return Ok(new
+            {
+                pendingJobs = status.PendingJobs,
+                processingJobs = status.ProcessingJobs,
+                completedJobs = status.CompletedJobs,
+                failedJobs = status.FailedJobs,
+                lastCompletedAt = status.LastCompletedAt
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to retrieve sync status.");
+            return StatusCode(500, new { error = "Failed to retrieve sync status." });
+        }
+    }
+
+    /// <summary>
+    /// Returns system-wide statistics: user counts, match counts, and sync job summary.
+    /// </summary>
+    [HttpGet("stats")]
+    public async Task<IActionResult> GetSystemStats()
+    {
+        try
+        {
+            var users = await _userRepository.GetAllActiveUsersAsync();
+            var usersList = users.ToList();
+
+            var totalMatches = await _context.Matches.CountAsync();
+
+            var today = DateTime.UtcNow.Date;
+            var todayUnixMs = new DateTimeOffset(DateTime.UtcNow.Date).ToUnixTimeMilliseconds();
+            var tomorrowUnixMs = new DateTimeOffset(DateTime.UtcNow.Date.AddDays(1)).ToUnixTimeMilliseconds();
+
+            var matchesToday = await _context.Matches
+                .CountAsync(m => m.GameCreation >= todayUnixMs && m.GameCreation < tomorrowUnixMs);
+
+
+            var syncStatus = await _dataSyncService.GetSyncStatusAsync();
+
+            return Ok(new
+            {
+                totalUsers = usersList.Count,
+                activeUsers = usersList.Count(u => u.IsActive),
+                totalMatches,
+                matchesToday,
+                pendingSyncJobs = syncStatus.PendingJobs,
+                failedSyncJobs = syncStatus.FailedJobs,
+                lastSyncTime = syncStatus.LastCompletedAt
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to retrieve system stats.");
+            return StatusCode(500, new { error = "Failed to retrieve stats." });
+        }
+    }
+
+    /// <summary>
+    /// Returns all registered users with their sync state — useful for the admin panel table.
+    /// </summary>
+    [HttpGet("users")]
+    public async Task<IActionResult> GetAllUsers()
+    {
+        try
+        {
+            var users = await _userRepository.GetAllActiveUsersAsync();
+
+            return Ok(users.Select(u => new
+            {
+                userId = u.UserId,
+                email = u.Email,
+                riotId = u.RiotId,
+                region = u.Region,
+                lastSync = u.LastSync,
+                hasPuuid = !string.IsNullOrEmpty(u.RiotPuuid)
+            }));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to retrieve user list.");
+            return StatusCode(500, new { error = "Failed to retrieve users." });
+        }
+    }
+}
+
+// Request body for POST /api/admin/sync.
+public class SyncRequest
+{
+    public string SyncType { get; set; } = "FULL_SYNC";
+    public bool ForceRefresh { get; set; } = false;
+
+    // When provided, only these users are synced. When null/empty, all active users are synced.
+    public List<Guid>? UserIds { get; set; }
+}

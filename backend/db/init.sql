@@ -292,7 +292,7 @@ CREATE TABLE `champions` (
 
 CREATE TABLE `items` (
   `item_id` INT NOT NULL,
-  `item_name` VARCHAR(100) NOT NULL,
+  `item_name` VARCHAR(300) NOT NULL,
   `description` TEXT NULL,
   `gold_cost` INT NULL,
   `image_url` VARCHAR(255) NULL,
