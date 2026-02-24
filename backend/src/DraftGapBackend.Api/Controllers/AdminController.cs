@@ -224,6 +224,28 @@ public class AdminController : ControllerBase
             return StatusCode(500, new { error = "Failed to retrieve users." });
         }
     }
+
+    /// <summary>
+    /// Deletes a user by ID for the admin panel.
+    /// </summary>
+    [HttpDelete("users/{userId}")]
+    public async Task<IActionResult> DeleteUser(Guid userId)
+    {
+        try
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+                return NotFound();
+
+            await _userRepository.DeleteAsync(userId);
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete user.");
+            return StatusCode(500, new { error = "Failed to delete user." });
+        }
+    }
 }
 
 // Request body for POST /api/admin/sync.
