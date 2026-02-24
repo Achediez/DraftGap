@@ -418,3 +418,5 @@ FodyWeavers.xsd
 *.msp
 
 claves/
+# Claves
+claves.json

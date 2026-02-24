@@ -1,0 +1,10 @@
+// Root host fills the viewport.
+:host {
+	display: block;
+	min-height: 100vh;
+}
+
+// Container for routed pages.
+.app-shell {
+	min-height: 100vh;
+}

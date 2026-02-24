@@ -1,0 +1,28 @@
+// Global box-sizing reset.
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+// Full-height layout base.
+html,
+body {
+	height: 100%;
+}
+
+// Global typography + background.
+body {
+	margin: 0;
+	font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+	background: radial-gradient(circle at top, #1a1f2b 0%, #0f1218 55%, #0b0e13 100%);
+	color: #e6e9f0;
+}
+
+// Use inherited font styles for form elements.
+button,
+input,
+select {
+	font: inherit;
+}
+/* You can add global styles to this file, and also import other style files */
