@@ -303,6 +303,18 @@ CREATE TABLE `items` (
   PRIMARY KEY (`item_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE `summoner_spells` (
+  `spell_id` INT NOT NULL,
+  `spell_key` VARCHAR(50) NOT NULL,
+  `spell_name` VARCHAR(50) NOT NULL,
+  `description` TEXT NULL,
+  `cooldown` INT NULL,
+  `image_url` VARCHAR(255) NULL,
+  `version` VARCHAR(20) NOT NULL,
+  PRIMARY KEY (`spell_id`),
+  INDEX `idx_spell_key` (`spell_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Rune path (Precision, Domination, Sorcery, Resolve, Inspiration)
 CREATE TABLE `rune_paths` (
   `path_id`   INT NOT NULL,
