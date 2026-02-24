@@ -1,6 +1,7 @@
-
 import { Component, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { AuthApiService } from '../auth/data/auth-api.service';
+import { HttpErrorResponse } from '@angular/common/http';
 
 /**
  * Página principal tras el login/registro.
@@ -26,36 +27,24 @@ import { CommonModule } from '@angular/common';
 export class DashboardComponent {
   /**
    * Indica si el usuario es administrador.
-   * En una app real, esto vendría del AuthService o similar.
+   * Se actualizará con el valor real del backend.
    */
   isAdmin = false;
 
   /**
-   * Datos simulados del usuario logueado.
-   * En producción, estos datos vendrían de la API/backend.
+   * Objeto con los datos del usuario logueado.
+   * Inicialmente vacío, se rellenará tras la petición al backend.
    */
-  user = {
-    email: localStorage.getItem('isAdmin') === '1' ? 'dgadmin@gmail.com' : 'dg@gmail.com',
-    riotId: localStorage.getItem('isAdmin') === '1' ? 'DGAdmin#EUW' : 'DGUser#EUW',
-    region: 'EUW',
-    rank: localStorage.getItem('isAdmin') === '1' ? 'Diamond IV' : 'Gold II',
-    winrate: localStorage.getItem('isAdmin') === '1' ? 58 : 51,
-    games: localStorage.getItem('isAdmin') === '1' ? 320 : 120,
-    iconUrl: 'https://ddragon.leagueoflegends.com/cdn/13.24.1/img/profileicon/4419.png'
-  };
+  user: any = {};
 
   /**
    * Estadísticas principales del usuario para mostrar en tarjetas.
+   * Se actualizarán tras obtener los datos reales.
    */
-  stats = [
-    { label: 'KDA', value: '4.2', color: '#00bba3' },
-    { label: 'Winrate', value: this.user.winrate + '%', color: '#3fa7ff' },
-    { label: 'Rango', value: this.user.rank, color: '#ffe156' },
-    { label: 'Partidas', value: this.user.games, color: '#ff6f61' }
-  ];
+  stats: any[] = [];
 
   /**
-   * Partidas recientes simuladas para la tabla.
+   * Partidas recientes simuladas para la tabla (puedes adaptar esto a datos reales si el backend lo permite).
    */
   recentMatches = [
     { champion: 'Jinx', championImg: 'https://ddragon.leagueoflegends.com/cdn/13.24.1/img/champion/Jinx.png', result: 'Victoria', kda: '12/3/8', date: '2026-02-17' },
@@ -69,17 +58,50 @@ export class DashboardComponent {
   menuOpen = false;
 
   /**
-   * Constructor: comprueba autenticación y rol admin.
-   * @param elRef Referencia al elemento raíz del componente (para detectar clics fuera)
+   * Controla la pestaña activa del dashboard (datos, partidas, estadísticas, etc.).
+   * Inspirado en la navegación de op.gg, u.gg, dpm.
    */
-  constructor(private elRef: ElementRef) {
+  activeTab: 'datos' | 'partidas' | 'stats' = 'datos';
+
+  /**
+   * Constructor: comprueba autenticación y obtiene los datos reales del usuario.
+   * @param elRef Referencia al elemento raíz del componente (para detectar clics fuera)
+   * @param authApi Servicio para acceder a la API de autenticación
+   */
+  constructor(private elRef: ElementRef, private authApi: AuthApiService) {
     // Si no hay token, redirige a login
     if (!localStorage.getItem('draftgap_token')) {
       window.location.href = '/auth';
       return;
     }
-    // Lee el estado de admin desde localStorage (simulación)
-    this.isAdmin = localStorage.getItem('isAdmin') === '1';
+
+    // Llama al backend para obtener los datos reales del usuario logueado
+    this.authApi.getCurrentUser().subscribe({
+      next: (data) => {
+        /**
+         * data contiene los datos reales del usuario devueltos por el backend:
+         * - email
+         * - riotId
+         * - isAdmin
+         * - lastSync
+         * - createdAt
+         */
+        this.user = data;
+        this.isAdmin = data.isAdmin;
+        // Actualiza las estadísticas principales con datos reales si están disponibles
+        this.stats = [
+          // Puedes adaptar estos campos según lo que devuelva el backend
+          { label: 'Riot ID', value: data.riotId || '-', color: '#00bba3' },
+          { label: 'Email', value: data.email, color: '#3fa7ff' },
+          { label: 'Creado', value: data.createdAt ? new Date(data.createdAt).toLocaleDateString() : '-', color: '#ffe156' },
+          { label: 'Última sync', value: data.lastSync ? new Date(data.lastSync).toLocaleDateString() : '-', color: '#ff6f61' }
+        ];
+      },
+      error: (err: HttpErrorResponse) => {
+        // Si hay error (token inválido, expirado, etc.), redirige a login
+        window.location.href = '/auth';
+      }
+    });
   }
 
   /**

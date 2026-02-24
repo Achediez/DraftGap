@@ -25,4 +25,9 @@ export class AuthApiService {
   register(payload: RegisterRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.baseUrl}/auth/register`, payload);
   }
+
+  // Llama a GET /auth/me para obtener los datos del usuario autenticado
+  getCurrentUser(): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/auth/me`);
+  }
 }

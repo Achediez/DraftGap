@@ -1,8 +1,27 @@
+<!--
+  Dashboard principal del usuario logueado.
+  Ahora muestra datos reales obtenidos del backend, manteniendo la estética original.
+-->
 <div class="dashboard-container">
+  <!-- Barra de navegación tipo pestañas (Tabs) -->
+  <nav class="dashboard-tabs">
+    <!--
+      Las pestañas permiten navegar entre diferentes secciones del perfil:
+      - Datos: información general del usuario
+      - Partidas: historial de partidas
+      - Estadísticas: métricas y gráficos (puedes ampliar esta sección en el futuro)
+      Puedes añadir más pestañas según crezca la app.
+    -->
+    <button [class.active]="activeTab === 'datos'" (click)="activeTab = 'datos'">Datos</button>
+    <button [class.active]="activeTab === 'partidas'" (click)="activeTab = 'partidas'">Partidas</button>
+    <button [class.active]="activeTab === 'stats'" (click)="activeTab = 'stats'">Estadísticas</button>
+  </nav>
+
+  <!-- Menú de usuario (icono y opciones) -->
   <div class="user-menu-bar">
     <div class="user-menu">
       <button class="user-menu-btn" aria-label="Opciones de usuario" (click)="toggleMenu()" [attr.aria-expanded]="menuOpen">
-        <img class="user-menu-icon" [src]="user.iconUrl" alt="icono usuario" />
+        <img class="user-menu-icon" [src]="user.iconUrl || 'https://ddragon.leagueoflegends.com/cdn/13.24.1/img/profileicon/4419.png'" alt="icono usuario" />
       </button>
       <div class="user-menu-dropdown" *ngIf="menuOpen" tabindex="-1">
         <button class="user-menu-item" (click)="logout($event)">Cerrar sesión</button>
@@ -10,41 +29,60 @@
       </div>
     </div>
   </div>
-  <div class="profile-header">
-    <img class="profile-icon" [src]="user.iconUrl" alt="icono perfil" />
-    <div class="profile-info">
-      <h1>{{ user.riotId }}</h1>
-      <div class="region">{{ user.region }}</div>
-      <div class="email">{{ user.email }}</div>
+
+  <!-- Contenido de la pestaña seleccionada -->
+  <div *ngIf="activeTab === 'datos'">
+    <!-- Cabecera de perfil con datos reales -->
+    <div class="profile-header">
+      <img class="profile-icon" [src]="user.iconUrl || 'https://ddragon.leagueoflegends.com/cdn/13.24.1/img/profileicon/4419.png'" alt="icono perfil" />
+      <div class="profile-info">
+        <h1>{{ user.riotId || '-' }}</h1>
+        <div class="region">{{ user.region || '-' }}</div>
+        <div class="email">{{ user.email || '-' }}</div>
+      </div>
+    </div>
+    <div class="stats-cards">
+      <div class="stat-card" *ngFor="let stat of stats" [style.background]="stat.color">
+        <div class="stat-label">{{ stat.label }}</div>
+        <div class="stat-value">{{ stat.value }}</div>
+      </div>
     </div>
   </div>
-  <div class="stats-cards">
-    <div class="stat-card" *ngFor="let stat of stats" [style.background]="stat.color">
-      <div class="stat-label">{{ stat.label }}</div>
-      <div class="stat-value">{{ stat.value }}</div>
+
+  <div *ngIf="activeTab === 'partidas'">
+    <!-- Tabla de partidas recientes (simulada, puedes adaptar a datos reales si el backend lo permite) -->
+    <div class="recent-matches">
+      <h3>Partidas recientes</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Campeón</th>
+            <th>Resultado</th>
+            <th>KDA</th>
+            <th>Fecha</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let match of recentMatches">
+            <td><img [src]="match.championImg" class="champion-img" alt="{{ match.champion }}" /> {{ match.champion }}</td>
+            <td>{{ match.result }}</td>
+            <td>{{ match.kda }}</td>
+            <td>{{ match.date }}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
-  <div class="recent-matches">
-    <h3>Partidas recientes</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Campeón</th>
-          <th>Resultado</th>
-          <th>KDA</th>
-          <th>Fecha</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let match of recentMatches">
-          <td><img [src]="match.championImg" class="champion-img" alt="{{ match.champion }}" /> {{ match.champion }}</td>
-          <td>{{ match.result }}</td>
-          <td>{{ match.kda }}</td>
-          <td>{{ match.date }}</td>
-        </tr>
-      </tbody>
-    </table>
+
+  <div *ngIf="activeTab === 'stats'">
+    <!-- Aquí puedes añadir gráficos, métricas avanzadas, etc. -->
+    <div class="stats-section">
+      <h3>Estadísticas avanzadas</h3>
+      <p>Próximamente: gráficos y métricas detalladas del usuario.</p>
+    </div>
   </div>
+
+  <!-- Acceso rápido a la sección de administración si el usuario es admin -->
   <div *ngIf="isAdmin" class="admin-section">
     <a routerLink="/admin">Ir a panel de administración</a>
   </div>

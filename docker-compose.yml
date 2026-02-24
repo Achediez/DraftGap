@@ -1,0 +1,66 @@
+services:
+
+  # ── MySQL ────────────────────────────────────────────────────────────────────
+  db:
+    build:
+      context: .
+      dockerfile: Dockerfile.database
+    container_name: draftgap_db
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+    command: --skip-name-resolve
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── phpMyAdmin ───────────────────────────────────────────────────────────────
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: draftgap_phpmyadmin
+    restart: always
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    depends_on:
+      - db
+
+  # ── Angular Frontend ──────────────────────────────────────────────────────
+  draftgap-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: draftgap-frontend
+    working_dir: /app
+    ports:
+      - "4200:4200"
+      - "49153:49153"
+    volumes:
+      # Mounts the Angular source for hot reload. Path relative to project root.
+      - ./frontend/draftgap-app:/app
+      # Prevents the host mount from overwriting node_modules built inside the image.
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    stdin_open: true
+    tty: true
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "--quiet", "http://localhost:4200"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+
+volumes:
+  db_data:
