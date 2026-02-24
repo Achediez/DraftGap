@@ -1,120 +1,131 @@
-Bienvenido a DraftGap, una aplicación diseñada para ayudarte a tomar mejores decisiones durante la fase de selección de campeones en League of Legends.
-Si nunca has usado una herramienta de este tipo o no tienes conocimientos técnicos, no te preocupes: esta guía está hecha para ti.
+Documentación General del Proyecto
+1. Introducción
+DraftGap es una aplicación orientada a proporcionar asistencia estratégica durante la fase de selección de campeones (champion draft) en League of Legends. Su función principal consiste en analizar la composición de ambos equipos, evaluar sinergias y matchups, y ofrecer recomendaciones fundamentadas en datos para optimizar la toma de decisiones del jugador.
 
-¿Qué es DraftGap?
-DraftGap es una aplicación que analiza:
+Este documento presenta una descripción formal y accesible del proyecto, dirigida tanto a usuarios sin experiencia técnica como a aquellos interesados en comprender su funcionamiento general.
 
-Tu equipo
+2. Objetivo del Proyecto
+El propósito de DraftGap es mejorar la calidad de las decisiones tomadas durante el proceso de selección de campeones. Para ello, la aplicación:
 
-El equipo enemigo
+Evalúa la composición del equipo propio y del equipo enemigo.
 
-Las sinergias entre campeones
+Analiza sinergias entre campeones.
 
-Los enfrentamientos (matchups)
+Identifica enfrentamientos favorables y desfavorables.
 
-La situación actual del meta
+Considera tendencias estadísticas del metajuego actual.
 
-Con esa información, te sugiere qué campeones son mejores para elegir en cada momento de la fase de draft.
-Su objetivo es ayudarte a tomar decisiones más inteligentes y aumentar tus probabilidades de ganar.
+A partir de estos elementos, el sistema genera recomendaciones justificadas y alternativas viables, con el fin de proporcionar una guía clara y objetiva al usuario.
 
-¿Para qué sirve?
-DraftGap te ayuda a:
+3. Funcionamiento General
+DraftGap opera como una herramienta externa que observa la fase de selección y procesa la información disponible. Su funcionamiento puede dividirse en tres etapas principales:
 
-Elegir campeones que funcionen bien con tu equipo.
+3.1. Detección del contexto
+La aplicación identifica automáticamente:
 
-Evitar picks que sean débiles contra los rivales.
+El rol asignado al usuario.
 
-Entender por qué un campeón es una buena o mala opción.
+Los campeones seleccionados por aliados y oponentes.
 
-Mejorar tu conocimiento del meta sin tener que estudiar estadísticas manualmente.
+El orden de selección y bloqueo.
 
-Es como tener un analista profesional a tu lado mientras haces el draft.
+3.2. Análisis
+Una vez recopilados los datos, DraftGap aplica modelos de evaluación basados en:
 
-¿Cómo funciona?
-La aplicación se conecta con el cliente de League of Legends (en las versiones que lo permiten) y detecta automáticamente:
+Estadísticas de rendimiento por campeón.
 
-Qué campeones se están seleccionando.
+Sinergias históricas entre combinaciones de campeones.
 
-En qué orden.
+Matchups relevantes según el metajuego.
 
-Qué rol estás jugando.
+3.3. Recomendación
+El sistema presenta:
 
-Luego, usando datos estadísticos y modelos de análisis, calcula:
+Campeones sugeridos para el rol del usuario.
 
-Matchups favorables
+Justificaciones basadas en datos.
 
-Sinergias con tus aliados
+Alternativas secundarias en caso de indisponibilidad del pick principal.
 
-Riesgos del pick
+4. Instalación y Uso
+DraftGap está diseñado para ser accesible incluso para usuarios sin conocimientos técnicos. Existen dos métodos principales de instalación: instalación tradicional y despliegue mediante Docker.
 
-Opciones alternativas
+4.1. Instalación Tradicional
+Descargue la versión correspondiente a su sistema operativo desde el repositorio.
 
-Todo esto se muestra de forma visual y sencilla.
+Ejecute el instalador y siga las instrucciones en pantalla.
 
-Cómo empezar (para usuarios sin experiencia)
-1. Descargar la aplicación
-En el repositorio original de DraftGap existen versiones para Windows y macOS.
-(Tu repositorio puede incluir instrucciones propias si has modificado el proyecto.)
+Abra el cliente de League of Legends.
 
-2. Instalar
-La instalación es igual que cualquier programa:
+Inicie DraftGap.
 
-En Windows: doble clic en el .exe o .msi
+La aplicación detectará automáticamente la fase de selección cuando comience una partida.
 
-En Mac: abrir el .dmg y arrastrar a Aplicaciones
+4.2. Instalación mediante Docker
+Esta opción es recomendable para usuarios que deseen ejecutar DraftGap en un entorno aislado, reproducible y sin necesidad de instalar dependencias manualmente.
 
-3. Abrir League of Legends
-DraftGap funciona mejor si el cliente está abierto antes de iniciar la app.
+4.2.1. Requisitos previos
+Tener instalado Docker (Docker Desktop en Windows/macOS o Docker Engine en Linux).
 
-4. Iniciar DraftGap
-La aplicación detectará automáticamente la fase de selección cuando entres en una partida.
+Conexión a Internet para descargar la imagen.
 
-5. Seguir las recomendaciones
-Verás sugerencias de campeones y explicaciones de por qué son buenas opciones.
+4.2.2. Construcción de la imagen
+Si desea construir la imagen localmente desde el repositorio:
 
-Estructura del proyecto (explicado para principiantes)
-Aunque no tengas conocimientos técnicos, aquí tienes una explicación sencilla de cómo está organizado el proyecto:
+bash
+docker build -t draftgap .
+Este comando generará una imagen llamada draftgap basada en el Dockerfile incluido en el proyecto.
 
-Carpeta	Para qué sirve
-apps/	Contiene las aplicaciones principales (web o escritorio).
-packages/core/	Aquí vive la lógica del análisis: cálculos, estadísticas, recomendaciones.
-scripts/	Herramientas internas para automatizar tareas del proyecto.
-.github/	Configuraciones para automatizar procesos en GitHub.
-package.json / pnpm / tsconfig	Archivos técnicos que gestionan dependencias y configuración del proyecto.
-(Esta estructura es típica del proyecto original y forks derivados.) 
+4.2.3. Ejecución del contenedor
+Para ejecutar la aplicación:
 
-¿Qué tecnologías usa?
-Aunque no necesites saber programar, es útil conocer qué hay detrás:
+bash
+docker run --name draftgap-container -p 3000:3000 draftgap
+--name draftgap-container asigna un nombre al contenedor.
 
-TypeScript / JavaScript → Lenguajes principales del proyecto.
+-p 3000:3000 expone el puerto de la aplicación para acceder a la interfaz.
 
-Framework web moderno (React o similar) → Para la interfaz.
+Una vez iniciado, podrá acceder a DraftGap desde su navegador en:
 
-Integración con el cliente de LoL → Para leer datos del draft.
+Código
+http://localhost:3000
+4.2.4. Detener y eliminar el contenedor
+Para detener el contenedor:
 
-Sistema de análisis estadístico → Para calcular recomendaciones.
+bash
+docker stop draftgap-container
+Para eliminarlo:
 
-¿Qué puedes modificar tú?
-Si tu repositorio es un fork o una versión personalizada, puedes:
+bash
+docker rm draftgap-container
+5. Estructura del Proyecto
+Carpeta / Archivo	Descripción
+apps/	Contiene las aplicaciones principales (interfaz web o escritorio).
+packages/core/	Implementa la lógica central del análisis y las recomendaciones.
+scripts/	Herramientas auxiliares para automatización.
+.github/	Configuración de flujos de trabajo e integración continua.
+package.json / pnpm / tsconfig	Archivos de configuración del entorno de desarrollo.
+6. Tecnologías Utilizadas
+DraftGap se desarrolla utilizando tecnologías modernas:
 
-Cambiar estilos visuales.
+TypeScript como lenguaje principal.
 
-Ajustar cómo se muestran las recomendaciones.
+Frameworks web modernos para la interfaz.
 
-Añadir nuevos criterios de análisis.
+Sistemas de análisis estadístico para la evaluación de campeones.
 
-Actualizar datos del meta.
+Integración con el cliente de League of Legends mediante lectura de datos expuestos por el propio juego.
 
-Preguntas frecuentes
-¿Necesito saber programar para usar DraftGap?
-No. Solo descargas, instalas y usas.
+7. Seguridad y Legalidad
+DraftGap no modifica el juego ni interactúa con él de forma intrusiva.
+Se limita a leer información accesible públicamente desde el cliente de League of Legends.
 
-¿Es legal usarlo?
-Sí. No modifica el juego ni interactúa con él de forma ilegal. Solo lee información pública del cliente.
+Por ello:
 
-¿Me puede banear Riot?
-No hay evidencia de que herramientas de análisis externas como esta causen baneos, ya que no alteran el juego.
+No altera archivos del juego.
 
-¿Funciona en ARAM o URF?
-Normalmente está pensado para partidas clasificatorias o normales con draft.
+No ejecuta acciones en nombre del usuario.
 
+No proporciona ventajas mecánicas.
+
+Su uso se considera seguro y no existen indicios de que pueda ocasionar sanciones por parte de Riot Games.
