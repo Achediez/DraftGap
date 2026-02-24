@@ -1,7 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, NavigationEnd } from '@angular/router';
 import { AdminApiService } from './admin-api.service';
 
 /**
@@ -15,7 +15,7 @@ import { AdminApiService } from './admin-api.service';
   templateUrl: './admin.component.html',
   styleUrls: ['./admin.component.scss']
 })
-export class AdminComponent {
+export class AdminComponent implements OnInit {
   showAddUser = false;
   users: any[] = [];
   selectedUser: any = null;
@@ -25,12 +25,15 @@ export class AdminComponent {
   addUserError: string | null = null;
   addUserSuccess = false;
 
-  constructor(private router: Router, private adminApi: AdminApiService) {
+  constructor(private router: Router, private adminApi: AdminApiService, private cdr: ChangeDetectorRef) {
     // Si no es admin, redirige al dashboard
     const isAdmin = localStorage.getItem('isAdmin');
     if (isAdmin !== '1' && isAdmin !== 'true') {
       this.router.navigate(['/dashboard']);
     }
+  }
+
+  ngOnInit() {
     this.loadUsers();
   }
 
@@ -53,7 +56,7 @@ export class AdminComponent {
       next: () => {
         this.addUserSuccess = true;
         this.newUser = { email: '', riotId: '', region: '', password: '', isAdmin: false };
-        this.loadUsers();
+        this.loadUsers(); // Refresca la lista tras crear
         setTimeout(() => {
           this.showAddUser = false;
           this.addUserSuccess = false;
@@ -73,15 +76,20 @@ export class AdminComponent {
    * Cargar usuarios desde el backend
    */
   loadUsers() {
+    console.log('[Admin] loadUsers() called');
     this.loading = true;
+    this.users = [];
     this.adminApi.getUsers().subscribe({
       next: users => {
+        console.log('[Admin] getUsers() response:', users);
         this.users = users;
         this.loading = false;
+        this.cdr.detectChanges();
       },
       error: err => {
         this.error = 'Error al cargar usuarios';
         this.loading = false;
+        console.error('[Admin] getUsers() error:', err);
       }
     });
   }

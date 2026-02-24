@@ -12,4 +12,12 @@ import { AdminComponent } from './features/admin/admin.component';
 })
 export class App {
   // Root component intentionally minimal.
+  onActivate(event: any) {
+    // Si el componente activado es AdminComponent, forzar recarga
+    if (event && event.constructor && event.constructor.name === 'AdminComponent') {
+      if (typeof event.loadUsers === 'function') {
+        event.loadUsers();
+      }
+    }
+  }
 }
