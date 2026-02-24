@@ -23,6 +23,7 @@ CREATE TABLE `users` (
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `last_sync` TIMESTAMP NULL, -- Last Riot API data sync
   `is_active` BOOLEAN NOT NULL DEFAULT TRUE,
+  `region` VARCHAR(10) NULL,
 
   PRIMARY KEY (`user_id`),
   UNIQUE INDEX `uq_email` (`email`),
@@ -92,9 +93,11 @@ CREATE TABLE `match_participants` (
   `participant_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `match_id` VARCHAR(50) NOT NULL,
   `puuid` VARCHAR(78) NOT NULL,
+  `riot_id_game_name` VARCHAR(100) NULL,
 
   `champion_id` INT NOT NULL,
   `champion_name` VARCHAR(50) NOT NULL,
+  `champ_level` INT NOT NULL DEFAULT 0,
   `team_id` INT NOT NULL, -- 100=Blue, 200=Red
   `team_position` VARCHAR(20) NOT NULL, -- TOP,JUNGLE,MIDDLE,BOTTOM,UTILITY
   `win` BOOLEAN NOT NULL,
@@ -107,7 +110,7 @@ CREATE TABLE `match_participants` (
   `total_damage_dealt` INT NOT NULL DEFAULT 0,
   `total_damage_dealt_to_champions` INT NOT NULL DEFAULT 0,
   `total_damage_taken` INT NOT NULL DEFAULT 0,
-  `vision_score` INT NOT NULL DEFAULT 0,
+  `vision_score` INT NOT NULL DEFAULT 0, 
   `cs` INT NOT NULL DEFAULT 0, -- Total minions killed
 
   `double_kills` INT NOT NULL DEFAULT 0,
@@ -340,11 +343,6 @@ ALTER TABLE `match_participants`
   FOREIGN KEY (`match_id`) REFERENCES `matches` (`match_id`)
   ON DELETE CASCADE ON UPDATE CASCADE;
 
-ALTER TABLE `match_participants`
-  ADD CONSTRAINT `fk_match_participants_players_puuid`
-  FOREIGN KEY (`puuid`) REFERENCES `players` (`puuid`)
-  ON DELETE CASCADE ON UPDATE CASCADE;
-
 ALTER TABLE `player_statistics_summary`
   ADD CONSTRAINT `fk_player_statistics_summary_players_puuid`
   FOREIGN KEY (`puuid`) REFERENCES `players` (`puuid`)
@@ -479,6 +477,307 @@ BEGIN
 END$$
 
 DELIMITER ;
+
+DELIMITER $$
+
+-- =====================================================
+-- TIER 1: Match Card Data
+-- Returns one row per match for a player's match history list.
+-- Provides exactly what is needed to render a compact match card:
+-- champion, KDA, CS, vision, damage, result, and match metadata.
+-- =====================================================
+CREATE PROCEDURE `GetPlayerMatchHistory`(
+    IN  p_puuid      VARCHAR(78),
+    IN  p_queue_id   INT,          -- Pass NULL to return all queues.
+    IN  p_limit      INT,          -- Number of matches to return.
+    IN  p_offset     INT           -- Pagination offset.
+)
+BEGIN
+    SELECT
+        m.match_id,
+        m.game_creation,
+        m.game_duration,
+        m.queue_id,
+        m.game_mode,
+        m.game_version,
+
+        -- Participant-level data for the requested player only.
+        mp.champion_id,
+        mp.champion_name,
+        mp.champ_level,
+        mp.team_position,
+        mp.win,
+        mp.kills,
+        mp.deaths,
+        mp.assists,
+        ROUND(
+            CASE WHEN mp.deaths = 0
+                THEN mp.kills + mp.assists
+                ELSE (mp.kills + mp.assists) / mp.deaths
+            END, 2
+        )                                       AS kda_ratio,
+        mp.cs,
+        ROUND(mp.cs / GREATEST(m.game_duration / 60, 1), 1) AS cs_per_minute,
+        mp.vision_score,
+        mp.gold_earned,
+        mp.total_damage_dealt_to_champions,
+        mp.summoner1_id,
+        mp.summoner2_id,
+        mp.perk_primary_style,
+        mp.perk_sub_style,
+        mp.perk0,                               -- Keystone rune ID.
+        mp.item0, mp.item1, mp.item2,
+        mp.item3, mp.item4, mp.item5, mp.item6,
+        mp.penta_kills,
+        mp.quadra_kills,
+        mp.triple_kills,
+        mp.double_kills,
+        mp.first_blood,
+
+        -- Champion static data for image rendering.
+        c.image_url                             AS champion_image_url
+
+    FROM match_participants mp
+    INNER JOIN matches   m ON mp.match_id    = m.match_id
+    LEFT  JOIN champions c ON mp.champion_id = c.champion_id
+
+    WHERE mp.puuid = p_puuid
+      AND (p_queue_id IS NULL OR m.queue_id = p_queue_id)
+
+    ORDER BY m.game_creation DESC
+    LIMIT  p_limit
+    OFFSET p_offset;
+END$$
+
+
+-- =====================================================
+-- TIER 2A: Full Match Scoreboard
+-- Returns all 10 participants for a given match, split by team.
+-- Used when the player expands a match card to see the full lobby.
+-- =====================================================
+CREATE PROCEDURE `GetMatchScoreboard`(
+    IN p_match_id VARCHAR(50)
+)
+BEGIN
+    SELECT
+        mp.team_id,                             -- 100 = Blue, 200 = Red.
+        mp.puuid,
+        mp.riot_id_game_name,
+        mp.champion_id,
+        mp.champion_name,
+        mp.champ_level,
+        mp.team_position,
+        mp.win,
+        mp.kills,
+        mp.deaths,
+        mp.assists,
+        ROUND(
+            CASE WHEN mp.deaths = 0
+                THEN mp.kills + mp.assists
+                ELSE (mp.kills + mp.assists) / mp.deaths
+            END, 2
+        )                                       AS kda_ratio,
+        mp.cs,
+        mp.vision_score,
+        mp.gold_earned,
+        mp.total_damage_dealt_to_champions,
+        mp.total_damage_taken,
+        mp.summoner1_id,
+        mp.summoner2_id,
+        mp.perk_primary_style,
+        mp.perk_sub_style,
+        mp.perk0,
+        mp.item0, mp.item1, mp.item2,
+        mp.item3, mp.item4, mp.item5, mp.item6,
+        mp.penta_kills,
+        mp.first_blood,
+
+        -- Static data for rendering without extra round trips.
+        c.image_url                             AS champion_image_url,
+
+        -- Damage share within the team, useful for the damage bar UI.
+        ROUND(
+            mp.total_damage_dealt_to_champions /
+            NULLIF(SUM(mp.total_damage_dealt_to_champions)
+                OVER (PARTITION BY mp.team_id), 0) * 100,
+        1)                                      AS team_damage_share_pct
+
+    FROM match_participants mp
+    LEFT JOIN champions c ON mp.champion_id = c.champion_id
+
+    WHERE mp.match_id = p_match_id
+    ORDER BY mp.team_id ASC, mp.team_position ASC;
+END$$
+
+
+-- =====================================================
+-- TIER 2B: Match Team Aggregates
+-- Returns one row per team with totals.
+-- Used to render the team summary bar at the bottom of the expanded card.
+-- =====================================================
+CREATE PROCEDURE `GetMatchTeamStats`(
+    IN p_match_id VARCHAR(50)
+)
+BEGIN
+    SELECT
+        mp.team_id,
+        mp.win,
+        SUM(mp.kills)                           AS total_kills,
+        SUM(mp.deaths)                          AS total_deaths,
+        SUM(mp.assists)                         AS total_assists,
+        SUM(mp.gold_earned)                     AS total_gold,
+        SUM(mp.total_damage_dealt_to_champions) AS total_damage,
+        SUM(mp.cs)                              AS total_cs,
+        SUM(mp.vision_score)                    AS total_vision,
+        SUM(mp.penta_kills)                     AS total_pentas
+
+    FROM match_participants mp
+    WHERE mp.match_id = p_match_id
+    GROUP BY mp.team_id, mp.win
+    ORDER BY mp.team_id ASC;
+END$$
+
+
+-- =====================================================
+-- TIER 3A: Player Profile Header
+-- Returns the top-level summary shown at the top of a profile page:
+-- overall winrate, KDA, average stats across all recent games.
+-- =====================================================
+CREATE PROCEDURE `GetPlayerProfileSummary`(
+    IN p_puuid     VARCHAR(78),
+    IN p_queue_id  INT,            -- Pass NULL for all queues.
+    IN p_limit     INT             -- How many recent games to base averages on.
+)
+BEGIN
+    SELECT
+        COUNT(*)                                                    AS total_games,
+        SUM(CASE WHEN mp.win = TRUE THEN 1 ELSE 0 END)             AS wins,
+        SUM(CASE WHEN mp.win = FALSE THEN 1 ELSE 0 END)            AS losses,
+        ROUND(
+            SUM(CASE WHEN mp.win = TRUE THEN 1 ELSE 0 END)
+            / COUNT(*) * 100, 1
+        )                                                           AS winrate_pct,
+        ROUND(AVG(mp.kills), 2)                                     AS avg_kills,
+        ROUND(AVG(mp.deaths), 2)                                    AS avg_deaths,
+        ROUND(AVG(mp.assists), 2)                                   AS avg_assists,
+        ROUND(
+            CASE WHEN AVG(mp.deaths) = 0
+                THEN AVG(mp.kills + mp.assists)
+                ELSE AVG((mp.kills + mp.assists) / mp.deaths)
+            END, 2
+        )                                                           AS avg_kda,
+        ROUND(AVG(mp.cs), 1)                                        AS avg_cs,
+        ROUND(AVG(mp.cs / GREATEST(m.game_duration / 60, 1)), 1)   AS avg_cs_per_min,
+        ROUND(AVG(mp.vision_score), 1)                              AS avg_vision,
+        ROUND(AVG(mp.total_damage_dealt_to_champions), 0)           AS avg_damage,
+        ROUND(AVG(mp.gold_earned), 0)                               AS avg_gold,
+        SUM(mp.penta_kills)                                         AS total_pentas
+
+    FROM (
+        -- Subquery limits to the N most recent matches before aggregating.
+        SELECT mp_inner.*
+        FROM match_participants mp_inner
+        INNER JOIN matches m_inner ON mp_inner.match_id = m_inner.match_id
+        WHERE mp_inner.puuid = p_puuid
+          AND (p_queue_id IS NULL OR m_inner.queue_id = p_queue_id)
+        ORDER BY m_inner.game_creation DESC
+        LIMIT p_limit
+    ) mp
+    INNER JOIN matches m ON mp.match_id = m.match_id;
+END$$
+
+
+-- =====================================================
+-- TIER 3B: Champion Pool
+-- Returns the player's most played champions with winrate and averages,
+-- used for the champion pool section of a profile page.
+-- =====================================================
+CREATE PROCEDURE `GetPlayerChampionPool`(
+    IN p_puuid    VARCHAR(78),
+    IN p_queue_id INT,             -- Pass NULL for all queues.
+    IN p_limit    INT              -- Number of champions to return (e.g. 5 or 10).
+)
+BEGIN
+    SELECT
+        mp.champion_id,
+        mp.champion_name,
+        c.image_url                                                 AS champion_image_url,
+        COUNT(*)                                                    AS games_played,
+        SUM(CASE WHEN mp.win = TRUE THEN 1 ELSE 0 END)             AS wins,
+        ROUND(
+            SUM(CASE WHEN mp.win = TRUE THEN 1 ELSE 0 END)
+            / COUNT(*) * 100, 1
+        )                                                           AS winrate_pct,
+        ROUND(AVG(mp.kills), 2)                                     AS avg_kills,
+        ROUND(AVG(mp.deaths), 2)                                    AS avg_deaths,
+        ROUND(AVG(mp.assists), 2)                                   AS avg_assists,
+        ROUND(
+            CASE WHEN AVG(mp.deaths) = 0
+                THEN AVG(mp.kills + mp.assists)
+                ELSE AVG((mp.kills + mp.assists) / mp.deaths)
+            END, 2
+        )                                                           AS avg_kda,
+        ROUND(AVG(mp.cs), 1)                                        AS avg_cs,
+        ROUND(AVG(mp.total_damage_dealt_to_champions), 0)           AS avg_damage,
+        -- Most frequent role on this champion.
+        (
+            SELECT mp2.team_position
+            FROM match_participants mp2
+            INNER JOIN matches m2 ON mp2.match_id = m2.match_id
+            WHERE mp2.puuid = p_puuid
+              AND mp2.champion_id = mp.champion_id
+              AND (p_queue_id IS NULL OR m2.queue_id = p_queue_id)
+            GROUP BY mp2.team_position
+            ORDER BY COUNT(*) DESC
+            LIMIT 1
+        )                                                           AS most_played_role
+
+    FROM match_participants mp
+    INNER JOIN matches   m ON mp.match_id    = m.match_id
+    LEFT  JOIN champions c ON mp.champion_id = c.champion_id
+
+    WHERE mp.puuid = p_puuid
+      AND (p_queue_id IS NULL OR m.queue_id = p_queue_id)
+
+    GROUP BY mp.champion_id, mp.champion_name, c.image_url
+    ORDER BY games_played DESC
+    LIMIT p_limit;
+END$$
+
+
+-- =====================================================
+-- TIER 3C: Role Distribution
+-- Returns how many games were played per role.
+-- Used for the role breakdown pie/bar on a profile page.
+-- =====================================================
+CREATE PROCEDURE `GetPlayerRoleDistribution`(
+    IN p_puuid    VARCHAR(78),
+    IN p_queue_id INT
+)
+BEGIN
+    SELECT
+        mp.team_position                                            AS role,
+        COUNT(*)                                                    AS games_played,
+        ROUND(COUNT(*) / SUM(COUNT(*)) OVER () * 100, 1)           AS role_share_pct,
+        SUM(CASE WHEN mp.win = TRUE THEN 1 ELSE 0 END)             AS wins,
+        ROUND(
+            SUM(CASE WHEN mp.win = TRUE THEN 1 ELSE 0 END)
+            / COUNT(*) * 100, 1
+        )                                                           AS winrate_pct
+
+    FROM match_participants mp
+    INNER JOIN matches m ON mp.match_id = m.match_id
+
+    WHERE mp.puuid = p_puuid
+      AND mp.team_position != ''
+      AND (p_queue_id IS NULL OR m.queue_id = p_queue_id)
+
+    GROUP BY mp.team_position
+    ORDER BY games_played DESC;
+END$$
+
+DELIMITER ;
+
 
 -- =====================================================
 -- Initial Admin User (Change password immediately!)
