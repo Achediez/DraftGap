@@ -16,17 +16,53 @@ public class AdminController : ControllerBase
     private readonly IUserRepository _userRepository;
     private readonly ApplicationDbContext _context;
     private readonly ILogger<AdminController> _logger;
+    private readonly IConfiguration _configuration;
 
     public AdminController(
         IDataSyncService dataSyncService,
         IUserRepository userRepository,
         ApplicationDbContext context,
-        ILogger<AdminController> logger)
+        ILogger<AdminController> logger,
+        IConfiguration configuration)
     {
         _dataSyncService = dataSyncService;
         _userRepository = userRepository;
         _context = context;
         _logger = logger;
+        _configuration = configuration;
+    }
+
+    /// <summary>
+    /// Returns a single user by ID for the admin panel.
+    /// </summary>
+    [HttpGet("users/{userId}")]
+    public async Task<IActionResult> GetUserById(Guid userId)
+    {
+        try
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+                return NotFound();
+
+            var adminEmails = _configuration.GetSection("Admin:AllowedEmails").Get<List<string>>() ?? new List<string>();
+
+            return Ok(new
+            {
+                userId = user.UserId,
+                email = user.Email,
+                riotId = user.RiotId,
+                region = user.Region,
+                lastSync = user.LastSync,
+                hasPuuid = !string.IsNullOrEmpty(user.RiotPuuid),
+                isAdmin = adminEmails.Contains(user.Email),
+                createdAt = user.CreatedAt
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to retrieve user by id.");
+            return StatusCode(500, new { error = "Failed to retrieve user." });
+        }
     }
 
     /// <summary>
@@ -168,6 +204,7 @@ public class AdminController : ControllerBase
         try
         {
             var users = await _userRepository.GetAllActiveUsersAsync();
+            var adminEmails = _configuration.GetSection("Admin:AllowedEmails").Get<List<string>>() ?? new List<string>();
 
             return Ok(users.Select(u => new
             {
@@ -176,7 +213,9 @@ public class AdminController : ControllerBase
                 riotId = u.RiotId,
                 region = u.Region,
                 lastSync = u.LastSync,
-                hasPuuid = !string.IsNullOrEmpty(u.RiotPuuid)
+                hasPuuid = !string.IsNullOrEmpty(u.RiotPuuid),
+                isAdmin = adminEmails.Contains(u.Email),
+                createdAt = u.CreatedAt
             }));
         }
         catch (Exception ex)

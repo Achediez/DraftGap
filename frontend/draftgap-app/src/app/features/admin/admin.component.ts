@@ -99,9 +99,11 @@ export class AdminComponent implements OnInit {
    */
   viewUser(user: any) {
     this.selectedUser = null;
-    this.adminApi.getUserById(user.user_id || user.id).subscribe({
+    this.cdr.detectChanges();
+    this.adminApi.getUserById(user.userId).subscribe({
       next: data => {
         this.selectedUser = data;
+        this.cdr.detectChanges();
       },
       error: () => alert('Error al cargar el perfil')
     });
@@ -113,7 +115,7 @@ export class AdminComponent implements OnInit {
   deleteUser(user: any) {
     if (user.email === 'prueba2@draftgap.local') return;
     if (confirm('¿Seguro que quieres eliminar a ' + user.email + '?')) {
-      this.adminApi.deleteUser(user.user_id || user.id).subscribe({
+      this.adminApi.deleteUser(user.userId).subscribe({
         next: () => this.loadUsers(),
         error: () => alert('Error al eliminar usuario')
       });
