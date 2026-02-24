@@ -1,13 +1,62 @@
+<!-- Modal de perfil de usuario -->
+<div class="user-modal-backdrop" *ngIf="selectedUser" (click)="selectedUser = null"></div>
+<div class="user-modal" *ngIf="selectedUser">
+  <div class="user-modal-content">
+    <button class="close-modal-btn" (click)="selectedUser = null">&times;</button>
+    <h3>Perfil de usuario</h3>
+    <div class="user-modal-details">
+      <div><strong>Email:</strong> {{ selectedUser.email }}</div>
+      <div><strong>Riot ID:</strong> {{ selectedUser.riotId }}</div>
+      <div><strong>Región:</strong> {{ selectedUser.region }}</div>
+      <div><strong>Admin:</strong> {{ selectedUser.isAdmin ? 'Sí' : 'No' }}</div>
+      <div><strong>Creado:</strong> {{ selectedUser.createdAt ? (selectedUser.createdAt | date:'short') : '-' }}</div>
+      <div><strong>Última sync:</strong> {{ selectedUser.lastSync ? (selectedUser.lastSync | date:'short') : '-' }}</div>
+    </div>
+  </div>
+</div>
 <div class="admin-container">
   <div class="admin-header">
     <h2>Panel de Administración</h2>
     <button class="back-dashboard-btn" (click)="goToDashboard()">Volver al Dashboard</button>
   </div>
   <div class="user-actions">
-    <button>Añadir usuario</button>
+    <form class="add-user-form" (ngSubmit)="addUser()" #userForm="ngForm">
+      <input type="email" name="email" [(ngModel)]="newUser.email" placeholder="Email" required />
+      <input type="text" name="riotId" [(ngModel)]="newUser.riotId" placeholder="Riot ID" required />
+      <input type="text" name="region" [(ngModel)]="newUser.region" placeholder="Región" required />
+      <input type="password" name="password" [(ngModel)]="newUser.password" placeholder="Contraseña" required />
+      <label>
+        <input type="checkbox" name="isAdmin" [(ngModel)]="newUser.isAdmin" /> Admin
+      </label>
+      <button type="submit" [disabled]="userForm.invalid || loading">Añadir usuario</button>
+    </form>
+    <div *ngIf="addUserError" class="error-msg">{{ addUserError }}</div>
+    <div *ngIf="addUserSuccess" class="success-msg">Usuario añadido correctamente</div>
   </div>
   <div class="user-list">
-    <!-- Aquí se listarán los usuarios con opciones para borrar/editar -->
-    <p>Lista de usuarios (próximamente)</p>
+    <table class="users-table">
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Riot ID</th>
+          <th>Región</th>
+          <th>Admin</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let user of users">
+          <td>{{ user.email }}</td>
+          <td>{{ user.riotId }}</td>
+          <td>{{ user.region }}</td>
+          <td>{{ user.isAdmin ? 'Sí' : 'No' }}</td>
+          <td>
+            <!-- Botones de acción: ver y eliminar -->
+            <button class="action-btn view-btn" (click)="viewUser(user)"><span aria-label="Ver perfil">🔍</span></button>
+            <button class="action-btn delete-btn" [disabled]="user.email === 'prueba2@draftgap.local'" (click)="deleteUser(user)"><span aria-label="Eliminar">🗑️</span></button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </div>
