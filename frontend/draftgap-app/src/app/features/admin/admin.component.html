@@ -20,18 +20,26 @@
     <button class="back-dashboard-btn" (click)="goToDashboard()">Volver al Dashboard</button>
   </div>
   <div class="user-actions">
-    <form class="add-user-form" (ngSubmit)="addUser()" #userForm="ngForm">
-      <input type="email" name="email" [(ngModel)]="newUser.email" placeholder="Email" required />
-      <input type="text" name="riotId" [(ngModel)]="newUser.riotId" placeholder="Riot ID" required />
-      <input type="text" name="region" [(ngModel)]="newUser.region" placeholder="Región" required />
-      <input type="password" name="password" [(ngModel)]="newUser.password" placeholder="Contraseña" required />
-      <label>
-        <input type="checkbox" name="isAdmin" [(ngModel)]="newUser.isAdmin" /> Admin
-      </label>
-      <button type="submit" [disabled]="userForm.invalid || loading">Añadir usuario</button>
-    </form>
-    <div *ngIf="addUserError" class="error-msg">{{ addUserError }}</div>
-    <div *ngIf="addUserSuccess" class="success-msg">Usuario añadido correctamente</div>
+    <button class="open-add-user-btn" (click)="showAddUser = true" *ngIf="!showAddUser">Añadir usuario</button>
+    <div *ngIf="showAddUser" class="add-user-modal-backdrop" (click)="showAddUser = false"></div>
+    <div *ngIf="showAddUser" class="add-user-modal">
+      <form class="add-user-form" (ngSubmit)="addUser()" #userForm="ngForm" (click)="$event.stopPropagation()">
+        <h3>Crear nuevo usuario</h3>
+        <input type="email" name="email" [(ngModel)]="newUser.email" placeholder="Email" required />
+        <input type="text" name="riotId" [(ngModel)]="newUser.riotId" placeholder="Riot ID" required />
+        <input type="text" name="region" [(ngModel)]="newUser.region" placeholder="Región" required />
+        <input type="password" name="password" [(ngModel)]="newUser.password" placeholder="Contraseña" required />
+        <label class="admin-checkbox">
+          <input type="checkbox" name="isAdmin" [(ngModel)]="newUser.isAdmin" /> Admin
+        </label>
+        <div class="add-user-actions">
+          <button type="submit" [disabled]="userForm.invalid || loading">Crear</button>
+          <button type="button" (click)="showAddUser = false">Cancelar</button>
+        </div>
+        <div *ngIf="addUserError" class="error-msg">{{ addUserError }}</div>
+        <div *ngIf="addUserSuccess" class="success-msg">Usuario añadido correctamente</div>
+      </form>
+    </div>
   </div>
   <div class="user-list">
     <table class="users-table">
@@ -45,19 +53,17 @@
         </tr>
       </thead>
       <tbody>
-        <ng-container *ngFor="let user of users">
-          <tr>
-            <td>{{ user.email }}</td>
-            <td>{{ user.riotId }}</td>
-            <td>{{ user.region }}</td>
-            <td>{{ user.isAdmin ? 'Sí' : 'No' }}</td>
-            <td>
-              <!-- Botones de acción: ver y eliminar -->
-              <button class="action-btn view-btn" (click)="viewUser(user)"><span aria-label="Ver perfil">🔍</span></button>
-              <button class="action-btn delete-btn" [disabled]="user.email === 'prueba2@draftgap.local'" (click)="deleteUser(user)"><span aria-label="Eliminar">🗑️</span></button>
-            </td>
-          </tr>
-        </ng-container>
+        <tr *ngFor="let user of users">
+          <td>{{ user.email }}</td>
+          <td>{{ user.riotId }}</td>
+          <td>{{ user.region }}</td>
+          <td>{{ user.isAdmin ? 'Sí' : 'No' }}</td>
+          <td>
+            <!-- Botones de acción: ver y eliminar -->
+            <button class="action-btn view-btn" (click)="viewUser(user)"><span aria-label="Ver perfil">🔍</span></button>
+            <button class="action-btn delete-btn" [disabled]="user.email === 'prueba2@draftgap.local'" (click)="deleteUser(user)"><span aria-label="Eliminar">🗑️</span></button>
+          </td>
+        </tr>
       </tbody>
     </table>
   </div>
