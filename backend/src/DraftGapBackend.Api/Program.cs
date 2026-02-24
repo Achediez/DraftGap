@@ -1,13 +1,15 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
-using System.Text;
+﻿using DraftGapBackend.Application.Interfaces;
 using DraftGapBackend.Application.Users;
 using DraftGapBackend.Domain.Abstractions;
 using DraftGapBackend.Infrastructure.Data;
 using DraftGapBackend.Infrastructure.Persistence;
 using DraftGapBackend.Infrastructure.Riot;
+using DraftGapBackend.Infrastructure.Sync;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -126,9 +128,17 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 // Riot API services with HttpClient factory pattern
 // HttpClient lifetime is managed automatically
 builder.Services.AddHttpClient<IRiotService, RiotService>();
+builder.Services.AddScoped<IRiotService, RiotService>();
 
 // Data Dragon static data service
 builder.Services.AddHttpClient<IDataDragonService, DataDragonService>();
+
+// Data sync service consumed by AdminController via IDataSyncService.
+builder.Services.AddScoped<IDataSyncService, DataSyncService>();
+
+// Background worker that polls sync_jobs and executes them via DataSyncService.
+// Declared as hosted service so the runtime manages its lifetime alongside the app.
+builder.Services.AddHostedService<RiotSyncBackgroundService>();
 
 // ====================================
 // CORS CONFIGURATION

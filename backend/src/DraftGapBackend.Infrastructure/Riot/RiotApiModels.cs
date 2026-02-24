@@ -3,6 +3,36 @@ using System.Collections.Generic;
 
 namespace DraftGapBackend.Infrastructure.Riot;
 
+public class PerksDto
+{
+    public PerkStatsDto StatPerks { get; set; } = new();
+    public List<PerkStyleDto> Styles { get; set; } = new();
+}
+
+public class PerkStatsDto
+{
+    public int Defense { get; set; }
+    public int Flex { get; set; }
+    public int Offense { get; set; }
+}
+
+public class PerkStyleDto
+{
+    // Value is either "primaryStyle" or "subStyle".
+    public string Description { get; set; } = string.Empty;
+    public List<PerkStyleSelectionDto> Selections { get; set; } = new();
+    public int Style { get; set; }
+}
+
+public class PerkStyleSelectionDto
+{
+    public int Perk { get; set; }
+    public int Var1 { get; set; }
+    public int Var2 { get; set; }
+    public int Var3 { get; set; }
+}
+
+
 public class RiotAccountDto
 {
     public string Puuid { get; set; } = string.Empty;
@@ -90,6 +120,9 @@ public class ParticipantDto
     public int TripleKills { get; set; }
     public int VisionScore { get; set; }
     public bool Win { get; set; }
+    public string RiotIdGameName { get; set; } = string.Empty;
+    public int ChampLevel { get; set; }
+    public PerksDto Perks { get; set; } = new();
 }
 
 public class RateLimitStatus

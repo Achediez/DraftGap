@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace DraftGapBackend.Domain.Entities;
 
 /// <summary>
-/// Application user with authentication credentials
+/// Application user with authentication credentials and Riot account linkage.
 /// </summary>
 [Table("users")]
 public class User
@@ -31,6 +31,11 @@ public class User
     [MaxLength(78)]
     [Column("riot_puuid")]
     public string? RiotPuuid { get; set; }
+
+    // Riot platform region (e.g. euw1, na1, kr) — used to route API requests correctly.
+    [MaxLength(10)]
+    [Column("region")]
+    public string? Region { get; set; }
 
     [Column("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
