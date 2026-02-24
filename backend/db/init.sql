@@ -492,17 +492,19 @@ DELIMITER ;
 
 DELIMITER $$
 
+DELIMITER $$
+
+DELIMITER $$
+
 -- =====================================================
 -- TIER 1: Match Card Data
--- Returns one row per match for a player's match history list.
--- Provides exactly what is needed to render a compact match card:
--- champion, KDA, CS, vision, damage, result, and match metadata.
 -- =====================================================
+DROP PROCEDURE IF EXISTS GetPlayerMatchHistory$$
 CREATE PROCEDURE `GetPlayerMatchHistory`(
     IN  p_puuid      VARCHAR(78),
-    IN  p_queue_id   INT,          -- Pass NULL to return all queues.
-    IN  p_limit      INT,          -- Number of matches to return.
-    IN  p_offset     INT           -- Pagination offset.
+    IN  p_queue_id   INT,
+    IN  p_limit      INT,
+    IN  p_offset     INT
 )
 BEGIN
     SELECT
@@ -512,8 +514,6 @@ BEGIN
         m.queue_id,
         m.game_mode,
         m.game_version,
-
-        -- Participant-level data for the requested player only.
         mp.champion_id,
         mp.champion_name,
         mp.champ_level,
@@ -537,7 +537,7 @@ BEGIN
         mp.summoner2_id,
         mp.perk_primary_style,
         mp.perk_sub_style,
-        mp.perk0,                               -- Keystone rune ID.
+        mp.perk0,
         mp.item0, mp.item1, mp.item2,
         mp.item3, mp.item4, mp.item5, mp.item6,
         mp.penta_kills,
@@ -545,15 +545,13 @@ BEGIN
         mp.triple_kills,
         mp.double_kills,
         mp.first_blood,
-
-        -- Champion static data for image rendering.
         c.image_url                             AS champion_image_url
 
     FROM match_participants mp
     INNER JOIN matches   m ON mp.match_id    = m.match_id
     LEFT  JOIN champions c ON mp.champion_id = c.champion_id
 
-    WHERE mp.puuid = p_puuid
+    WHERE mp.puuid COLLATE utf8mb4_unicode_ci = p_puuid
       AND (p_queue_id IS NULL OR m.queue_id = p_queue_id)
 
     ORDER BY m.game_creation DESC
@@ -564,15 +562,14 @@ END$$
 
 -- =====================================================
 -- TIER 2A: Full Match Scoreboard
--- Returns all 10 participants for a given match, split by team.
--- Used when the player expands a match card to see the full lobby.
 -- =====================================================
+DROP PROCEDURE IF EXISTS GetMatchScoreboard$$
 CREATE PROCEDURE `GetMatchScoreboard`(
     IN p_match_id VARCHAR(50)
 )
 BEGIN
     SELECT
-        mp.team_id,                             -- 100 = Blue, 200 = Red.
+        mp.team_id,
         mp.puuid,
         mp.riot_id_game_name,
         mp.champion_id,
@@ -603,11 +600,7 @@ BEGIN
         mp.item3, mp.item4, mp.item5, mp.item6,
         mp.penta_kills,
         mp.first_blood,
-
-        -- Static data for rendering without extra round trips.
         c.image_url                             AS champion_image_url,
-
-        -- Damage share within the team, useful for the damage bar UI.
         ROUND(
             mp.total_damage_dealt_to_champions /
             NULLIF(SUM(mp.total_damage_dealt_to_champions)
@@ -617,16 +610,15 @@ BEGIN
     FROM match_participants mp
     LEFT JOIN champions c ON mp.champion_id = c.champion_id
 
-    WHERE mp.match_id = p_match_id
+    WHERE mp.match_id COLLATE utf8mb4_unicode_ci = p_match_id
     ORDER BY mp.team_id ASC, mp.team_position ASC;
 END$$
 
 
 -- =====================================================
 -- TIER 2B: Match Team Aggregates
--- Returns one row per team with totals.
--- Used to render the team summary bar at the bottom of the expanded card.
 -- =====================================================
+DROP PROCEDURE IF EXISTS GetMatchTeamStats$$
 CREATE PROCEDURE `GetMatchTeamStats`(
     IN p_match_id VARCHAR(50)
 )
@@ -644,7 +636,7 @@ BEGIN
         SUM(mp.penta_kills)                     AS total_pentas
 
     FROM match_participants mp
-    WHERE mp.match_id = p_match_id
+    WHERE mp.match_id COLLATE utf8mb4_unicode_ci = p_match_id
     GROUP BY mp.team_id, mp.win
     ORDER BY mp.team_id ASC;
 END$$
@@ -652,13 +644,12 @@ END$$
 
 -- =====================================================
 -- TIER 3A: Player Profile Header
--- Returns the top-level summary shown at the top of a profile page:
--- overall winrate, KDA, average stats across all recent games.
 -- =====================================================
+DROP PROCEDURE IF EXISTS GetPlayerProfileSummary$$
 CREATE PROCEDURE `GetPlayerProfileSummary`(
     IN p_puuid     VARCHAR(78),
-    IN p_queue_id  INT,            -- Pass NULL for all queues.
-    IN p_limit     INT             -- How many recent games to base averages on.
+    IN p_queue_id  INT,
+    IN p_limit     INT
 )
 BEGIN
     SELECT
@@ -686,11 +677,10 @@ BEGIN
         SUM(mp.penta_kills)                                         AS total_pentas
 
     FROM (
-        -- Subquery limits to the N most recent matches before aggregating.
         SELECT mp_inner.*
         FROM match_participants mp_inner
         INNER JOIN matches m_inner ON mp_inner.match_id = m_inner.match_id
-        WHERE mp_inner.puuid = p_puuid
+        WHERE mp_inner.puuid COLLATE utf8mb4_unicode_ci = p_puuid
           AND (p_queue_id IS NULL OR m_inner.queue_id = p_queue_id)
         ORDER BY m_inner.game_creation DESC
         LIMIT p_limit
@@ -701,13 +691,12 @@ END$$
 
 -- =====================================================
 -- TIER 3B: Champion Pool
--- Returns the player's most played champions with winrate and averages,
--- used for the champion pool section of a profile page.
 -- =====================================================
+DROP PROCEDURE IF EXISTS GetPlayerChampionPool$$
 CREATE PROCEDURE `GetPlayerChampionPool`(
     IN p_puuid    VARCHAR(78),
-    IN p_queue_id INT,             -- Pass NULL for all queues.
-    IN p_limit    INT              -- Number of champions to return (e.g. 5 or 10).
+    IN p_queue_id INT,
+    IN p_limit    INT
 )
 BEGIN
     SELECT
@@ -731,12 +720,11 @@ BEGIN
         )                                                           AS avg_kda,
         ROUND(AVG(mp.cs), 1)                                        AS avg_cs,
         ROUND(AVG(mp.total_damage_dealt_to_champions), 0)           AS avg_damage,
-        -- Most frequent role on this champion.
         (
             SELECT mp2.team_position
             FROM match_participants mp2
             INNER JOIN matches m2 ON mp2.match_id = m2.match_id
-            WHERE mp2.puuid = p_puuid
+            WHERE mp2.puuid COLLATE utf8mb4_unicode_ci = p_puuid
               AND mp2.champion_id = mp.champion_id
               AND (p_queue_id IS NULL OR m2.queue_id = p_queue_id)
             GROUP BY mp2.team_position
@@ -748,7 +736,7 @@ BEGIN
     INNER JOIN matches   m ON mp.match_id    = m.match_id
     LEFT  JOIN champions c ON mp.champion_id = c.champion_id
 
-    WHERE mp.puuid = p_puuid
+    WHERE mp.puuid COLLATE utf8mb4_unicode_ci = p_puuid
       AND (p_queue_id IS NULL OR m.queue_id = p_queue_id)
 
     GROUP BY mp.champion_id, mp.champion_name, c.image_url
@@ -759,9 +747,8 @@ END$$
 
 -- =====================================================
 -- TIER 3C: Role Distribution
--- Returns how many games were played per role.
--- Used for the role breakdown pie/bar on a profile page.
 -- =====================================================
+DROP PROCEDURE IF EXISTS GetPlayerRoleDistribution$$
 CREATE PROCEDURE `GetPlayerRoleDistribution`(
     IN p_puuid    VARCHAR(78),
     IN p_queue_id INT
@@ -780,7 +767,7 @@ BEGIN
     FROM match_participants mp
     INNER JOIN matches m ON mp.match_id = m.match_id
 
-    WHERE mp.puuid = p_puuid
+    WHERE mp.puuid COLLATE utf8mb4_unicode_ci = p_puuid
       AND mp.team_position != ''
       AND (p_queue_id IS NULL OR m.queue_id = p_queue_id)
 
@@ -795,10 +782,25 @@ DELIMITER ;
 -- Initial Admin User (Change password immediately!)
 -- =====================================================
 
--- Password: 'admin123' - CHANGE THIS IN PRODUCTION!
+-- Password: 'AdminTest123'
 INSERT INTO `users` (`user_id`, `email`, `password_hash`, `is_active`)
 VALUES ('aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb', 'admin@draftgap.local', '$2a$12$i5pRBHCbqnrfCMsXmw6/1e2hz4/FgKWXTsdMV5B5.vpEHxsNwYOTe', TRUE);
+
+INSERT INTO `users` (`user_id`, `email`, `password_hash`, `riot_id`, `riot_puuid`, `is_active`, `region`)
+VALUES
+('bbbbbbbb-0000-1111-2222-cccccccccccc', 'ggg@draftgap.local', '$2a$12$i5pRBHCbqnrfCMsXmw6/1e2hz4/FgKWXTsdMV5B5.vpEHxsNwYOTe', "DG Pr0m1sTeR#GGG", "urf7Ia1n2eDZN0SImfpBP-PKn1aTF33hnwj8GbSYzubiFuz8yUdziynX_3YfmtvpNZL559gPge6GRw", TRUE, "euw1"),
+('cccccccc-0000-1111-2222-dddddddddddd', 'h10@draftgap.local', '$2a$12$i5pRBHCbqnrfCMsXmw6/1e2hz4/FgKWXTsdMV5B5.vpEHxsNwYOTe', "DG Achediez#H10", "0I3jROQVtOoz88pkDUpYztTB5VEvxIWgLjwJWOwEP0xueXE95Dl4OdZjW-5CnBBTP_gHCrHkfXkmYg", TRUE, "euw1");
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
+
+`user_id`
+`email`
+`password_hash`
+`riot_id`
+`riot_puuid`
+`created_at`
+`last_sync`
+`is_active`
+`region`
