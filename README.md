@@ -317,9 +317,9 @@ El usuario administrador se registra con el email configurado en `Admin:AllowedE
 
 | Tipo      | Email                        | Contraseña               | Riot ID              | Región |
 | --------- | ---------------------------- | ------------------------- | -------------------- | ------- |
-| Admin     | `admin@draftgap.local`     | *(definida en secrets)* | —                   | —      |
-| Usuario A | `promister@draftgap.local` | `SecurePass123!`        | `DG Pr0m1sTeR#GGG` | EUW     |
-| Usuario B | `achedie@draftgap.local`   | `SecurePass123!`        | `DG AchediezH10`   | EUW     |
+| Admin     | `admin@draftgap.local`     | `AdminTest123` | —                   | —      |
+| Usuario A | `promister@draftgap.local` | `AdminTest123`        | `DG Pr0m1sTeR#GGG` | EUW     |
+| Usuario B | `achedie@draftgap.local`   | `AdminTest123`        | `DG AchediezH10`   | EUW     |
 
 > El sistema solo acepta los Riot IDs `DG Pr0m1sTeR#GGG` y `DG AchediezH10` durante el registro (whitelist de desarrollo). Esto puede modificarse en `AuthController.cs`.
 
