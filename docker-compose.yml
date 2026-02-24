@@ -23,6 +23,58 @@ services:
       timeout: 5s
       retries: 5
 
+<<<<<<< HEAD
+=======
+  # ── .NET Backend API ─────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: draftgap_backend
+    restart: always
+    ports:
+      - "5057:5057"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
+      - ASPNETCORE_URLS=http://+:5057
+      # Double underscore maps to nested JSON keys in IConfiguration.
+      # 'db' resolves to the MySQL container via the internal Docker network.
+      - ConnectionStrings__DefaultConnection=Server=db;Port=3306;Database=${MYSQL_DATABASE};Uid=root;Pwd=${MYSQL_ROOT_PASSWORD};OldGuids=true;CharSet=utf8mb4;
+      - RiotApi__ApiKey=${RIOT_API_KEY}
+      - Jwt__SecretKey=${JWT_SECRET_KEY}
+      - Jwt__Issuer=${JWT_ISSUER}
+      - Jwt__Audience=${JWT_AUDIENCE}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # ── Angular Frontend ──────────────────────────────────────────────────────
+  draftgap-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: draftgap-frontend
+    working_dir: /app
+    ports:
+      - "4200:4200"
+      - "49153:49153"
+    volumes:
+      - ./frontend/draftgap-app:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - backend
+    stdin_open: true
+    tty: true
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "--quiet", "http://localhost:4200"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+
+>>>>>>> a349f78369f584c560c9f81e3b1d1f36bfcce773
   # ── phpMyAdmin ───────────────────────────────────────────────────────────────
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
@@ -36,6 +88,7 @@ services:
     depends_on:
       - db
 
+<<<<<<< HEAD
   # ── Angular Frontend ──────────────────────────────────────────────────────
   draftgap-frontend:
     build:
@@ -62,5 +115,7 @@ services:
       retries: 6
       start_period: 30s
 
+=======
+>>>>>>> a349f78369f584c560c9f81e3b1d1f36bfcce773
 volumes:
   db_data:
