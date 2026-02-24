@@ -40,6 +40,15 @@ export class AdminComponent {
   addUser() {
     this.addUserError = null;
     this.addUserSuccess = false;
+    // Validación mínima
+    if (!this.newUser.email || !this.newUser.riotId || !this.newUser.region || !this.newUser.password) {
+      this.addUserError = 'Todos los campos son obligatorios';
+      return;
+    }
+    if (this.newUser.password.length < 6) {
+      this.addUserError = 'La contraseña debe tener al menos 6 caracteres';
+      return;
+    }
     this.adminApi.addUser(this.newUser).subscribe({
       next: () => {
         this.addUserSuccess = true;
@@ -51,7 +60,11 @@ export class AdminComponent {
         }, 1200);
       },
       error: err => {
-        this.addUserError = 'Error al añadir usuario';
+        if (err?.error?.error) {
+          this.addUserError = err.error.error;
+        } else {
+          this.addUserError = 'Error al añadir usuario';
+        }
       }
     });
   }

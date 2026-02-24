@@ -20,7 +20,13 @@ export class AdminApiService {
     return this.http.delete(`${this.baseUrl}/users/${userId}`);
   }
 
+  /**
+   * Crea un usuario usando el endpoint de registro oficial (AuthController)
+   * Permite marcar como admin si el backend lo soporta por email o flag.
+   */
   addUser(user: any): Observable<any> {
-    return this.http.post(`${this.baseUrl}/users`, user);
+    // El endpoint de registro es /api/auth/register
+    // El backend determina si es admin por email o por el campo isAdmin si lo soporta
+    return this.http.post('/api/auth/register', user);
   }
 }
