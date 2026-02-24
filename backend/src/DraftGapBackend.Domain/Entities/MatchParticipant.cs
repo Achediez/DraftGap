@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace DraftGapBackend.Domain.Entities;
 
 /// <summary>
-/// Player performance in a specific match
+/// Player performance data for a single participant slot within a match.
 /// </summary>
 [Table("match_participants")]
 public class MatchParticipant
@@ -23,6 +23,11 @@ public class MatchParticipant
     [Column("puuid")]
     public string Puuid { get; set; } = string.Empty;
 
+    // Display name as returned by Riot (GameName#TAG format).
+    [MaxLength(100)]
+    [Column("riot_id_game_name")]
+    public string? RiotIdGameName { get; set; }
+
     [Column("champion_id")]
     public int ChampionId { get; set; }
 
@@ -30,6 +35,10 @@ public class MatchParticipant
     [MaxLength(50)]
     [Column("champion_name")]
     public string ChampionName { get; set; } = string.Empty;
+
+    // Champion level reached at end of game.
+    [Column("champ_level")]
+    public int ChampLevel { get; set; }
 
     [Column("team_id")]
     public int TeamId { get; set; }
@@ -117,14 +126,30 @@ public class MatchParticipant
     [Column("perk_sub_style")]
     public int? PerkSubStyle { get; set; }
 
-    // Navigation properties
+    [Column("perk0")]
+    public int? Perk0 { get; set; }
+
+    [Column("perk1")]
+    public int? Perk1 { get; set; }
+
+    [Column("perk2")]
+    public int? Perk2 { get; set; }
+
+    [Column("perk3")]
+    public int? Perk3 { get; set; }
+
+    [Column("perk4")]
+    public int? Perk4 { get; set; }
+
+    [Column("perk5")]
+    public int? Perk5 { get; set; }
+
     [ForeignKey("MatchId")]
     public virtual Match Match { get; set; } = null!;
 
     [ForeignKey("Puuid")]
     public virtual Player Player { get; set; } = null!;
 
-    // Computed property
     [NotMapped]
     public double KDA => Deaths == 0 ? Kills + Assists : (double)(Kills + Assists) / Deaths;
 }
