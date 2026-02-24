@@ -1,8 +1,11 @@
 using System;
-using System.Security.Cryptography;
-using System.Text;
 using System.Collections.Generic;
-using System.Linq;
+using System.Threading.Tasks;
+using DraftGapBackend.Domain.Abstractions;
+using DraftGapBackend.Domain.Entities;
+using BC = BCrypt.Net.BCrypt;
+
+namespace DraftGapBackend.Application.Users;
 
 public class UserService : IUserService
 {
@@ -26,32 +29,15 @@ public class UserService : IUserService
 
         var user = new User
         {
-            // Validaciones de seguridad y formato (acumula todos los errores)
-            var validationErrors = UserValidator.ValidateAll(request.UserName, request.Email, request.Password);
-            if (validationErrors.Any())
-            {
-                // Muestra todos los errores en consola
-                foreach (var err in validationErrors)
-                    Console.WriteLine($"[VALIDATION ERROR] {err}");
-                // Lanza una excepción con todos los errores concatenados
-                throw new ArgumentException(string.Join(" | ", validationErrors));
-            }
+            Email = request.Email,
+            PasswordHash = passwordHash,
+            CreatedAt = DateTime.UtcNow,
+            IsActive = true
+        };
 
-            await EnsureUserDoesNotExist(request.Email, request.UserName);
-            var user = new User
-            {
-                Id = Guid.NewGuid(),
-                Email = request.Email,
-                UserName = request.UserName,
-                PasswordHash = HashPassword(request.Password)
-            };
-            await _userRepository.AddAsync(user);
-            // Imprime la lista de usuarios tras registrar
-            LogAllUsers();
-            return user;
-        }
-        // Lógica de login de usuario
-        public async Task<User?> LoginAsync(LoginUserRequest request)
+        var createdUser = await _userRepository.CreateAsync(user);
+
+        return new AuthResponse
         {
             UserId = createdUser.UserId,
             Email = createdUser.Email,
