@@ -45,17 +45,19 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let user of users">
-          <td>{{ user.email }}</td>
-          <td>{{ user.riotId }}</td>
-          <td>{{ user.region }}</td>
-          <td>{{ user.isAdmin ? 'Sí' : 'No' }}</td>
-          <td>
-            <!-- Botones de acción: ver y eliminar -->
-            <button class="action-btn view-btn" (click)="viewUser(user)"><span aria-label="Ver perfil">🔍</span></button>
-            <button class="action-btn delete-btn" [disabled]="user.email === 'prueba2@draftgap.local'" (click)="deleteUser(user)"><span aria-label="Eliminar">🗑️</span></button>
-          </td>
-        </tr>
+        <ng-container *ngFor="let user of users">
+          <tr>
+            <td>{{ user.email }}</td>
+            <td>{{ user.riotId }}</td>
+            <td>{{ user.region }}</td>
+            <td>{{ user.isAdmin ? 'Sí' : 'No' }}</td>
+            <td>
+              <!-- Botones de acción: ver y eliminar -->
+              <button class="action-btn view-btn" (click)="viewUser(user)"><span aria-label="Ver perfil">🔍</span></button>
+              <button class="action-btn delete-btn" [disabled]="user.email === 'prueba2@draftgap.local'" (click)="deleteUser(user)"><span aria-label="Eliminar">🗑️</span></button>
+            </td>
+          </tr>
+        </ng-container>
       </tbody>
     </table>
   </div>
