@@ -221,6 +221,35 @@ public class AuthController : ControllerBase
         }));
     }
 
+    [HttpGet("users")]
+    public async Task<IActionResult> GetAllUsers()
+    {
+        try
+        {
+            var users = await _userService.GetAllActiveUsersAsync();
+
+            // Obtén la lista de emails de admin desde la configuración
+            var adminEmails = _configuration.GetSection("Admin:AllowedEmails").Get<List<string>>() ?? new List<string>();
+
+            return Ok(users.Select(u => new
+            {
+                userId = u.UserId,
+                email = u.Email,
+                riotId = u.RiotId,
+                region = u.Region,
+                lastSync = u.LastSync,
+                hasPuuid = !string.IsNullOrEmpty(u.RiotPuuid),
+                isAdmin = adminEmails.Contains(u.Email),
+                createdAt = u.CreatedAt // Elimina esta línea si no existe en tu entidad User
+            }));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to retrieve user list.");
+            return StatusCode(500, new { error = "Failed to retrieve users." });
+        }
+    }
+
     private string GenerateJwtToken(Guid userId, string email, bool isAdmin)
     {
         var jwtSettings = _configuration.GetSection("Jwt");
