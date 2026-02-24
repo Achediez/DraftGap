@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener } from '@angular/core';
+import { Component, ElementRef, HostListener, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthApiService } from '../auth/data/auth-api.service';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -68,7 +68,7 @@ export class DashboardComponent {
    * @param elRef Referencia al elemento raíz del componente (para detectar clics fuera)
    * @param authApi Servicio para acceder a la API de autenticación
    */
-  constructor(private elRef: ElementRef, private authApi: AuthApiService) {
+  constructor(private elRef: ElementRef, private authApi: AuthApiService, private cdr: ChangeDetectorRef) {
     // Si no hay token, redirige a login
     if (!localStorage.getItem('draftgap_token')) {
       window.location.href = '/auth';
@@ -96,6 +96,7 @@ export class DashboardComponent {
           { label: 'Creado', value: data.createdAt ? new Date(data.createdAt).toLocaleDateString() : '-', color: '#ffe156' },
           { label: 'Última sync', value: data.lastSync ? new Date(data.lastSync).toLocaleDateString() : '-', color: '#ff6f61' }
         ];
+        this.cdr.detectChanges();
       },
       error: (err: HttpErrorResponse) => {
         // Si hay error (token inválido, expirado, etc.), redirige a login

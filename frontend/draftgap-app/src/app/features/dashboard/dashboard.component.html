@@ -1,89 +1,88 @@
 <!--
   Dashboard principal del usuario logueado.
-  Ahora muestra datos reales obtenidos del backend, manteniendo la estética original.
+  Añadido: pantalla de carga y bienvenida para mejorar la experiencia visual inicial.
 -->
 <div class="dashboard-container">
-  <!-- Barra de navegación tipo pestañas (Tabs) -->
-  <nav class="dashboard-tabs">
-    <!--
-      Las pestañas permiten navegar entre diferentes secciones del perfil:
-      - Datos: información general del usuario
-      - Partidas: historial de partidas
-      - Estadísticas: métricas y gráficos (puedes ampliar esta sección en el futuro)
-      Puedes añadir más pestañas según crezca la app.
-    -->
-    <button [class.active]="activeTab === 'datos'" (click)="activeTab = 'datos'">Datos</button>
-    <button [class.active]="activeTab === 'partidas'" (click)="activeTab = 'partidas'">Partidas</button>
-    <button [class.active]="activeTab === 'stats'" (click)="activeTab = 'stats'">Estadísticas</button>
-  </nav>
+  <!-- Pantalla de carga atractiva mientras se obtienen los datos del usuario -->
+  <div *ngIf="!user || !user.email" class="dashboard-loading">
+    <div class="loading-spinner"></div>
+    <h2>¡Bienvenido a DraftGap!</h2>
+    <p>Cargando tu perfil y estadísticas...</p>
+  </div>
 
-  <!-- Menú de usuario (icono y opciones) -->
-  <div class="user-menu-bar">
-    <div class="user-menu">
-      <button class="user-menu-btn" aria-label="Opciones de usuario" (click)="toggleMenu()" [attr.aria-expanded]="menuOpen">
-        <img class="user-menu-icon" [src]="user.iconUrl || 'https://ddragon.leagueoflegends.com/cdn/13.24.1/img/profileicon/4419.png'" alt="icono usuario" />
-      </button>
-      <div class="user-menu-dropdown" *ngIf="menuOpen" tabindex="-1">
-        <button class="user-menu-item" (click)="logout($event)">Cerrar sesión</button>
-        <button *ngIf="isAdmin" class="user-menu-item" (click)="goToAdmin($event)">Gestión</button>
+  <!-- Contenido principal solo se muestra si hay datos de usuario -->
+  <ng-container *ngIf="user && user.email">
+    <!-- Barra de navegación tipo pestañas (Tabs) -->
+    <nav class="dashboard-tabs">
+      <button [class.active]="activeTab === 'datos'" (click)="activeTab = 'datos'">Datos</button>
+      <button [class.active]="activeTab === 'partidas'" (click)="activeTab = 'partidas'">Partidas</button>
+      <button [class.active]="activeTab === 'stats'" (click)="activeTab = 'stats'">Estadísticas</button>
+    </nav>
+
+    <!-- Menú de usuario (icono y opciones) -->
+    <div class="user-menu-bar">
+      <div class="user-menu">
+        <button class="user-menu-btn" aria-label="Opciones de usuario" (click)="toggleMenu()" [attr.aria-expanded]="menuOpen">
+          <img class="user-menu-icon" [src]="user.iconUrl || 'https://ddragon.leagueoflegends.com/cdn/13.24.1/img/profileicon/4419.png'" alt="icono usuario" />
+        </button>
+        <div class="user-menu-dropdown" *ngIf="menuOpen" tabindex="-1">
+          <button class="user-menu-item" (click)="logout($event)">Cerrar sesión</button>
+          <button *ngIf="isAdmin" class="user-menu-item" (click)="goToAdmin($event)">Gestión</button>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Contenido de la pestaña seleccionada -->
-  <div *ngIf="activeTab === 'datos'">
-    <!-- Cabecera de perfil con datos reales -->
-    <div class="profile-header">
-      <img class="profile-icon" [src]="user.iconUrl || 'https://ddragon.leagueoflegends.com/cdn/13.24.1/img/profileicon/4419.png'" alt="icono perfil" />
-      <div class="profile-info">
-        <h1>{{ user.riotId || '-' }}</h1>
-        <div class="region">{{ user.region || '-' }}</div>
-        <div class="email">{{ user.email || '-' }}</div>
+    <!-- Contenido de la pestaña seleccionada -->
+    <div *ngIf="activeTab === 'datos'">
+      <div class="profile-header">
+        <img class="profile-icon" [src]="user.iconUrl || 'https://ddragon.leagueoflegends.com/cdn/13.24.1/img/profileicon/4419.png'" alt="icono perfil" />
+        <div class="profile-info">
+          <h1>{{ user.riotId || '-' }}</h1>
+          <div class="region">{{ user.region || '-' }}</div>
+          <div class="email">{{ user.email || '-' }}</div>
+        </div>
+      </div>
+      <div class="stats-cards">
+        <div class="stat-card" *ngFor="let stat of stats" [style.background]="stat.color">
+          <div class="stat-label">{{ stat.label }}</div>
+          <div class="stat-value">{{ stat.value }}</div>
+        </div>
       </div>
     </div>
-    <div class="stats-cards">
-      <div class="stat-card" *ngFor="let stat of stats" [style.background]="stat.color">
-        <div class="stat-label">{{ stat.label }}</div>
-        <div class="stat-value">{{ stat.value }}</div>
+
+    <div *ngIf="activeTab === 'partidas'">
+      <div class="recent-matches">
+        <h3>Partidas recientes</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Campeón</th>
+              <th>Resultado</th>
+              <th>KDA</th>
+              <th>Fecha</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let match of recentMatches">
+              <td><img [src]="match.championImg" class="champion-img" alt="{{ match.champion }}" /> {{ match.champion }}</td>
+              <td>{{ match.result }}</td>
+              <td>{{ match.kda }}</td>
+              <td>{{ match.date }}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
-  </div>
 
-  <div *ngIf="activeTab === 'partidas'">
-    <!-- Tabla de partidas recientes (simulada, puedes adaptar a datos reales si el backend lo permite) -->
-    <div class="recent-matches">
-      <h3>Partidas recientes</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Campeón</th>
-            <th>Resultado</th>
-            <th>KDA</th>
-            <th>Fecha</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let match of recentMatches">
-            <td><img [src]="match.championImg" class="champion-img" alt="{{ match.champion }}" /> {{ match.champion }}</td>
-            <td>{{ match.result }}</td>
-            <td>{{ match.kda }}</td>
-            <td>{{ match.date }}</td>
-          </tr>
-        </tbody>
-      </table>
+    <div *ngIf="activeTab === 'stats'">
+      <div class="stats-section">
+        <h3>Estadísticas avanzadas</h3>
+        <p>Próximamente: gráficos y métricas detalladas del usuario.</p>
+      </div>
     </div>
-  </div>
 
-  <div *ngIf="activeTab === 'stats'">
-    <!-- Aquí puedes añadir gráficos, métricas avanzadas, etc. -->
-    <div class="stats-section">
-      <h3>Estadísticas avanzadas</h3>
-      <p>Próximamente: gráficos y métricas detalladas del usuario.</p>
+    <div *ngIf="isAdmin" class="admin-section">
+      <a routerLink="/admin">Ir a panel de administración</a>
     </div>
-  </div>
-
-  <!-- Acceso rápido a la sección de administración si el usuario es admin -->
-  <div *ngIf="isAdmin" class="admin-section">
-    <a routerLink="/admin">Ir a panel de administración</a>
-  </div>
+  </ng-container>
 </div>

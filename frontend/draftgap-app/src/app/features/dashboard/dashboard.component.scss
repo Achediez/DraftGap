@@ -179,3 +179,67 @@
 .admin-section a:hover {
   text-decoration: underline;
 }
+
+// Pantalla de carga atractiva
+.dashboard-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  text-align: center;
+  h2 {
+    color: #3fa7ff;
+    margin-top: 1.5rem;
+    font-size: 2.2rem;
+    letter-spacing: 1px;
+  }
+  p {
+    color: #bfc9e0;
+    margin-top: 0.5rem;
+    font-size: 1.1rem;
+  }
+}
+.loading-spinner {
+  width: 60px;
+  height: 60px;
+  border: 6px solid #e6eaf3;
+  border-top: 6px solid #3fa7ff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 2rem auto 0 auto;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+// Barra de navegación tipo pestañas (tabs)
+.dashboard-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin: 2.5rem 0 1.5rem 0;
+  background: #181a29;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+  padding: 0.5rem 0;
+  button {
+    background: none;
+    border: none;
+    color: #bfc9e0;
+    font-size: 1.15rem;
+    font-weight: 500;
+    padding: 0.7rem 2.2rem;
+    border-radius: 8px 8px 0 0;
+    cursor: pointer;
+    transition: background 0.18s, color 0.18s;
+    outline: none;
+  }
+  button.active, button:hover, button:focus {
+    background: #3fa7ff;
+    color: #181a29;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(63,167,255,0.10);
+  }
+}
