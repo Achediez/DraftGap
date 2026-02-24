@@ -1,0 +1,5 @@
+FROM mysql:8.0
+
+# init.sql path is relative to the build context (project root).
+# Since context is root, the path must include the full relative path to the file.
+COPY backend/db/init.sql /docker-entrypoint-initdb.d/

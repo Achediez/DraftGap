@@ -10,7 +10,8 @@ RUN npm install -g @angular/cli@21.1.3 npm@11.8.0
 # attempts to prompt for consent in a non-interactive Docker environment.
 RUN ng analytics disable --global
 
-COPY package*.json ./
+# package.json lives in frontend/draftgap-app/ relative to the build context root.
+COPY frontend/draftgap-app/package*.json ./
 
 RUN npm install
 

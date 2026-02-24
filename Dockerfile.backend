@@ -1,0 +1,36 @@
+# Stage 1 — Build stage using the full .NET SDK image.
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+
+WORKDIR /src
+
+COPY backend/DraftGapBackendSolucion.sln DraftGapBackendSolucion.sln
+
+COPY backend/src/DraftGapBackend.Api/DraftGapBackend.Api.csproj src/DraftGapBackend.Api/
+COPY backend/src/DraftGapBackend.Application/DraftGapBackend.Application.csproj src/DraftGapBackend.Application/
+COPY backend/src/DraftGapBackend.Domain/DraftGapBackend.Domain.csproj src/DraftGapBackend.Domain/
+COPY backend/src/DraftGapBackend.Infrastructure/DraftGapBackend.Infrastructure.csproj src/DraftGapBackend.Infrastructure/
+COPY backend/tests/DraftGapBackend.Tests/DraftGapBackend.Tests.csproj tests/DraftGapBackend.Tests/
+
+RUN dotnet restore DraftGapBackendSolucion.sln
+
+COPY backend/src/ src/
+COPY backend/tests/ tests/
+
+RUN dotnet publish src/DraftGapBackend.Api/DraftGapBackend.Api.csproj \
+    -c Release \
+    -o /app/publish \
+    --no-restore
+
+# Stage 2 — Runtime stage using ASP.NET 9.0 runtime only, no SDK overhead.
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
+WORKDIR /app
+
+COPY --from=build /app/publish .
+
+# Tell ASP.NET Core to listen on 5057 inside the container, matching the
+# application URL configured in launchSettings.json and appsettings.json.
+ENV ASPNETCORE_URLS=http://+:5057
+
+EXPOSE 5057
+
+ENTRYPOINT ["dotnet", "DraftGapBackend.Api.dll"]
