@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { Router } from '@angular/router';
 
 /**
  * Panel de administración para gestión de usuarios.
@@ -14,10 +15,11 @@ import { Component } from '@angular/core';
  * Incluye botón para volver al dashboard principal.
  */
 export class AdminComponent {
-  constructor() {
+  constructor(private router: Router) {
     // Si no es admin, redirige al dashboard
-    if (localStorage.getItem('isAdmin') !== '1') {
-      window.location.href = '/dashboard';
+    const isAdmin = localStorage.getItem('isAdmin');
+    if (isAdmin !== '1' && isAdmin !== 'true') {
+      this.router.navigate(['/dashboard']);
     }
   }
 
@@ -25,7 +27,7 @@ export class AdminComponent {
    * Redirige al dashboard principal.
    */
   goToDashboard() {
-    window.location.href = '/dashboard';
+    this.router.navigate(['/dashboard']);
   }
   // Aquí se gestionarán los usuarios: listar, añadir, borrar, etc.
   // TODO: Implementar lógica real de gestión de usuarios.

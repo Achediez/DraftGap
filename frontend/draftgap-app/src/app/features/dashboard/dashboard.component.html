@@ -82,7 +82,7 @@
     </div>
 
     <div *ngIf="isAdmin" class="admin-section">
-      <a routerLink="/admin">Ir a panel de administración</a>
+      <a class="admin-link" (click)="goToAdmin($event)" href="#">Ir a panel de administración</a>
     </div>
   </ng-container>
 </div>

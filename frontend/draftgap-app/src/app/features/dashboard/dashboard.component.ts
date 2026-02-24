@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { AuthApiService } from '../auth/data/auth-api.service';
 import { HttpErrorResponse } from '@angular/common/http';
 
+import { Router } from '@angular/router';
 /**
  * Página principal tras el login/registro.
  * Inspirada en DPM, u.gg, Lolalytics, etc.
@@ -68,7 +69,12 @@ export class DashboardComponent {
    * @param elRef Referencia al elemento raíz del componente (para detectar clics fuera)
    * @param authApi Servicio para acceder a la API de autenticación
    */
-  constructor(private elRef: ElementRef, private authApi: AuthApiService, private cdr: ChangeDetectorRef) {
+  constructor(
+    private elRef: ElementRef,
+    private authApi: AuthApiService,
+    private cdr: ChangeDetectorRef,
+    private router: Router
+  ) {
     // Si no hay token, redirige a login
     if (!localStorage.getItem('draftgap_token')) {
       window.location.href = '/auth';
@@ -88,6 +94,8 @@ export class DashboardComponent {
          */
         this.user = data;
         this.isAdmin = data.isAdmin;
+        // Guarda isAdmin en localStorage para acceso a admin
+        localStorage.setItem('isAdmin', data.isAdmin ? '1' : '0');
         // Actualiza las estadísticas principales con datos reales si están disponibles
         this.stats = [
           // Puedes adaptar estos campos según lo que devuelva el backend
@@ -139,11 +147,12 @@ export class DashboardComponent {
    * Acceso a la gestión de usuarios (solo admin).
    */
   goToAdmin(event: Event) {
-    event.stopPropagation();
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
     this.menuOpen = false;
-    setTimeout(() => {
-      window.location.href = '/admin';
-    }, 100);
+    this.router.navigate(['/admin']);
   }
   // TODO: Cargar datos reales del usuario y estadísticas aquí.
 }
