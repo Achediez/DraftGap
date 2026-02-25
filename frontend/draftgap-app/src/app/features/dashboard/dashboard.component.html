@@ -1,26 +1,17 @@
-<!--
-  Dashboard principal del usuario logueado.
-  Añadido: pantalla de carga y bienvenida para mejorar la experiencia visual inicial.
--->
 <div class="dashboard-container">
-  <!-- Pantalla de carga atractiva mientras se obtienen los datos del usuario -->
   <div *ngIf="!user || !user.email" class="dashboard-loading">
     <div class="loading-spinner"></div>
     <h2>¡Bienvenido a DraftGap!</h2>
     <p>Cargando tu perfil y estadísticas...</p>
   </div>
 
-  <!-- Contenido principal solo se muestra si hay datos de usuario -->
   <ng-container *ngIf="user && user.email">
-    <!-- Barra de navegación tipo pestañas (Tabs) -->
-    <nav class="dashboard-tabs">
-      <button [class.active]="activeTab === 'datos'" (click)="activeTab = 'datos'">Datos</button>
-      <button [class.active]="activeTab === 'partidas'" (click)="activeTab = 'partidas'">Partidas</button>
-      <button [class.active]="activeTab === 'stats'" (click)="activeTab = 'stats'">Estadísticas</button>
-    </nav>
+    <header class="dashboard-topbar">
+      <div class="brand-block">
+        <h1>DraftGap</h1>
+        <p>Rendimiento, decisiones y progreso en una sola vista.</p>
+      </div>
 
-    <!-- Menú de usuario (icono y opciones) -->
-    <div class="user-menu-bar">
       <div class="user-menu">
         <button class="user-menu-btn" aria-label="Opciones de usuario" (click)="toggleMenu()" [attr.aria-expanded]="menuOpen">
           <img class="user-menu-icon" [src]="user.iconUrl || 'https://ddragon.leagueoflegends.com/cdn/13.24.1/img/profileicon/4419.png'" alt="icono usuario" />
@@ -30,35 +21,69 @@
           <button *ngIf="isAdmin" class="user-menu-item" (click)="goToAdmin($event)">Gestión</button>
         </div>
       </div>
-    </div>
+    </header>
 
-    <!-- Contenido de la pestaña seleccionada -->
-    <div *ngIf="activeTab === 'datos'">
+    <div class="hero-panel">
       <div class="profile-header">
         <img class="profile-icon" [src]="user.iconUrl || 'https://ddragon.leagueoflegends.com/cdn/13.24.1/img/profileicon/4419.png'" alt="icono perfil" />
         <div class="profile-info">
-          <h1>{{ user.riotId || '-' }}</h1>
+          <h2>{{ user.riotId || '-' }}</h2>
           <div class="region">{{ user.region || '-' }}</div>
           <div class="email">{{ user.email || '-' }}</div>
         </div>
       </div>
-      <div class="stats-cards">
-        <div class="stat-card" *ngFor="let stat of stats" [style.background]="stat.color">
-          <div class="stat-label">{{ stat.label }}</div>
-          <div class="stat-value">{{ stat.value }}</div>
-        </div>
+
+      <div class="summary-cards">
+        <article class="summary-card" *ngFor="let card of summaryCards">
+          <span class="summary-label">{{ card.label }}</span>
+          <strong class="summary-value">{{ card.value }}</strong>
+        </article>
       </div>
     </div>
 
-    <div *ngIf="activeTab === 'partidas'">
-      <div class="recent-matches">
-        <h3>Partidas recientes</h3>
+    <nav class="dashboard-sections">
+      <button [class.active]="activeSection === 'historial'" (click)="activeSection = 'historial'">Historial</button>
+      <button [class.active]="activeSection === 'campeones'" (click)="activeSection = 'campeones'">Campeones</button>
+      <button [class.active]="activeSection === 'ranked'" (click)="activeSection = 'ranked'">Ranked</button>
+      <button [class.active]="activeSection === 'jugadores'" (click)="activeSection = 'jugadores'">Jugadores</button>
+      <button [class.active]="activeSection === 'graficos'" (click)="activeSection = 'graficos'">Gráficos</button>
+      <button [class.active]="activeSection === 'chatbot'" (click)="activeSection = 'chatbot'">Chatbot / Personal Trainer</button>
+    </nav>
+
+    <section *ngIf="activeSection === 'historial'" class="content-grid">
+      <aside class="side-panel">
+        <div class="panel-block">
+          <h3>Ranked snapshot</h3>
+          <p class="tier">{{ rankedOverview.tier }} · {{ rankedOverview.lp }} LP</p>
+          <p>MMR estimado: {{ rankedOverview.mmr }}</p>
+          <p>Ganancia/Pérdida: {{ rankedOverview.lpDelta }}</p>
+        </div>
+
+        <div class="panel-block">
+          <h3>Top picks</h3>
+          <ul>
+            <li *ngFor="let pick of topPicks">{{ pick.champion }} · {{ pick.games }} partidas · {{ pick.winrate }}</li>
+          </ul>
+        </div>
+
+        <div class="panel-block">
+          <h3>Jugadores destacados</h3>
+          <ul>
+            <li *ngFor="let p of trackedPlayers">{{ p.name }} · {{ p.relation }} · {{ p.lane }}</li>
+          </ul>
+        </div>
+      </aside>
+
+      <article class="main-panel">
+        <h3>Historial de partidas</h3>
         <table>
           <thead>
             <tr>
               <th>Campeón</th>
               <th>Resultado</th>
               <th>KDA</th>
+              <th>CS</th>
+              <th>Modo</th>
               <th>Fecha</th>
             </tr>
           </thead>
@@ -67,19 +92,83 @@
               <td><img [src]="match.championImg" class="champion-img" alt="{{ match.champion }}" /> {{ match.champion }}</td>
               <td>{{ match.result }}</td>
               <td>{{ match.kda }}</td>
+              <td>{{ match.cs }}</td>
+              <td>{{ match.mode }}</td>
               <td>{{ match.date }}</td>
             </tr>
           </tbody>
         </table>
-      </div>
-    </div>
+      </article>
+    </section>
 
-    <div *ngIf="activeTab === 'stats'">
-      <div class="stats-section">
-        <h3>Estadísticas avanzadas</h3>
-        <p>Próximamente: gráficos y métricas detalladas del usuario.</p>
+    <section *ngIf="activeSection === 'campeones'" class="section-card">
+      <h3>Campeones · Maestría y rendimiento</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Campeón</th>
+            <th>Maestría</th>
+            <th>Puntos</th>
+            <th>Winrate</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let champ of championMasteries">
+            <td>{{ champ.champion }}</td>
+            <td>{{ champ.mastery }}</td>
+            <td>{{ champ.points }}</td>
+            <td>{{ champ.winrate }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section *ngIf="activeSection === 'ranked'" class="section-card">
+      <h3>Ranked · Elo, MMR y LP</h3>
+      <div class="ranked-grid">
+        <article>
+          <span>Tier actual</span>
+          <strong>{{ rankedOverview.tier }}</strong>
+        </article>
+        <article>
+          <span>LP actual</span>
+          <strong>{{ rankedOverview.lp }} LP</strong>
+        </article>
+        <article>
+          <span>MMR estimado</span>
+          <strong>{{ rankedOverview.mmr }}</strong>
+        </article>
+        <article>
+          <span>Ganancia / Pérdida</span>
+          <strong>{{ rankedOverview.lpDelta }}</strong>
+        </article>
       </div>
-    </div>
+    </section>
+
+    <section *ngIf="activeSection === 'jugadores'" class="section-card">
+      <h3>Jugadores · amigos y jugadores macheados</h3>
+      <ul class="players-list">
+        <li *ngFor="let p of trackedPlayers">
+          <strong>{{ p.name }}</strong>
+          <span>{{ p.relation }}</span>
+          <span>{{ p.lane }}</span>
+        </li>
+      </ul>
+    </section>
+
+    <section *ngIf="activeSection === 'graficos'" class="section-card">
+      <h3>Gráficos</h3>
+      <div class="placeholder-grid">
+        <article>Rendimiento por partida</article>
+        <article>Winrate por campeón</article>
+        <article>Distribución por modo</article>
+      </div>
+    </section>
+
+    <section *ngIf="activeSection === 'chatbot'" class="section-card">
+      <h3>Chatbot / Personal Trainer</h3>
+      <p>Próximamente: asistente IA para análisis de partidas, rutinas de mejora y recomendaciones personalizadas.</p>
+    </section>
 
     <div *ngIf="isAdmin" class="admin-section">
       <a class="admin-link" (click)="goToAdmin($event)" href="#">Ir a panel de administración</a>
