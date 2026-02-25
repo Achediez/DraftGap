@@ -208,6 +208,13 @@
   font-size: 1rem;
 }
 
+.players-category h4,
+.sent-requests h4 {
+  margin: 0 0 0.6rem;
+  font-size: 0.95rem;
+  color: #9fb0d3;
+}
+
 .panel-block p {
   margin: 0.2rem 0;
   color: #b7c2db;
@@ -303,6 +310,87 @@ th {
   color: #cfd7ee;
 }
 
+.players-section-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap: 0.8rem;
+}
+
+.players-category {
+  background: #161b29;
+  border: 1px solid #2a3246;
+  border-radius: 10px;
+  padding: 0.8rem;
+}
+
+.friends-request-card {
+  margin-top: 0.8rem;
+}
+
+.friend-request-form {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.friend-request-form input {
+  flex: 1;
+  background: #101624;
+  border: 1px solid #2f3950;
+  border-radius: 8px;
+  color: #dce4f9;
+  padding: 0.55rem 0.7rem;
+}
+
+.friend-request-form input:focus {
+  outline: none;
+  border-color: #3fa7ff;
+}
+
+.friend-request-form button {
+  border: 1px solid #3fa7ff;
+  background: #3fa7ff;
+  color: #0f1420;
+  border-radius: 8px;
+  padding: 0.55rem 0.9rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.friend-request-message,
+.friend-request-error {
+  margin: 0.7rem 0 0;
+  font-size: 0.9rem;
+}
+
+.friend-request-message {
+  color: #6ce5a9;
+}
+
+.friend-request-error {
+  color: #ff8f9a;
+}
+
+.sent-requests {
+  margin-top: 0.8rem;
+}
+
+.sent-requests ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sent-requests li {
+  color: #b7c2db;
+  border-bottom: 1px solid #2b3247;
+  padding: 0.3rem 0;
+}
+
+.sent-requests li:last-child {
+  border-bottom: 0;
+}
+
 .admin-section {
   margin-top: 1rem;
   text-align: right;
@@ -322,7 +410,8 @@ th {
 
   .summary-cards,
   .ranked-grid,
-  .placeholder-grid {
+  .placeholder-grid,
+  .players-section-grid {
     grid-template-columns: repeat(2, minmax(120px, 1fr));
   }
 }
@@ -335,7 +424,13 @@ th {
   .summary-cards,
   .ranked-grid,
   .placeholder-grid,
-  .players-list li {
+  .players-list li,
+  .players-section-grid {
     grid-template-columns: 1fr;
+  }
+
+  .friend-request-form {
+    flex-direction: column;
+    align-items: stretch;
   }
 }

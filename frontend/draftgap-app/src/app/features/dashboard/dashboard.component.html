@@ -67,9 +67,16 @@
         </div>
 
         <div class="panel-block">
-          <h3>Jugadores destacados</h3>
+          <h3>Amigos</h3>
           <ul>
-            <li *ngFor="let p of trackedPlayers">{{ p.name }} · {{ p.relation }} · {{ p.lane }}</li>
+            <li *ngFor="let friend of friends">{{ friend.name }} · {{ friend.lane }} · {{ friend.status }}</li>
+          </ul>
+        </div>
+
+        <div class="panel-block">
+          <h3>Players recientes</h3>
+          <ul>
+            <li *ngFor="let p of recentPlayers">{{ p.name }} · {{ p.lane }} · {{ p.result }}</li>
           </ul>
         </div>
       </aside>
@@ -146,14 +153,53 @@
     </section>
 
     <section *ngIf="activeSection === 'jugadores'" class="section-card">
-      <h3>Jugadores · amigos y jugadores macheados</h3>
-      <ul class="players-list">
-        <li *ngFor="let p of trackedPlayers">
-          <strong>{{ p.name }}</strong>
-          <span>{{ p.relation }}</span>
-          <span>{{ p.lane }}</span>
-        </li>
-      </ul>
+      <h3>Jugadores</h3>
+      <div class="players-section-grid">
+        <article class="players-category">
+          <h4>Amigos</h4>
+          <ul class="players-list">
+            <li *ngFor="let friend of friends">
+              <strong>{{ friend.name }}</strong>
+              <span>{{ friend.lane }}</span>
+              <span>{{ friend.status }}</span>
+            </li>
+          </ul>
+        </article>
+
+        <article class="players-category">
+          <h4>Players recientes</h4>
+          <ul class="players-list">
+            <li *ngFor="let p of recentPlayers">
+              <strong>{{ p.name }}</strong>
+              <span>{{ p.lane }}</span>
+              <span>{{ p.result }}</span>
+            </li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section *ngIf="activeSection === 'jugadores'" class="section-card friends-request-card">
+      <h3>Amigos · enviar solicitud</h3>
+      <form class="friend-request-form" (ngSubmit)="sendFriendRequest()">
+        <input
+          type="text"
+          name="friendRiotId"
+          [(ngModel)]="friendRequestRiotId"
+          placeholder="Riot ID (ej: DraftGapPlayer#EUW)"
+        />
+        <button type="submit">Enviar solicitud</button>
+      </form>
+
+      <p *ngIf="friendRequestMessage" class="friend-request-message">{{ friendRequestMessage }}</p>
+      <p *ngIf="friendRequestError" class="friend-request-error">{{ friendRequestError }}</p>
+
+      <div *ngIf="sentFriendRequests.length > 0" class="sent-requests">
+        <h4>Solicitudes enviadas</h4>
+        <ul>
+          <li *ngFor="let req of sentFriendRequests">{{ req.riotId }} · {{ req.status }}</li>
+        </ul>
+      </div>
     </section>
 
     <section *ngIf="activeSection === 'graficos'" class="section-card">

@@ -1,5 +1,6 @@
 import { Component, ElementRef, HostListener, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { AuthApiService } from '../auth/data/auth-api.service';
 import { HttpErrorResponse } from '@angular/common/http';
 
@@ -21,7 +22,7 @@ import { Router } from '@angular/router';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
@@ -43,11 +44,22 @@ export class DashboardComponent {
     { champion: 'Thresh', games: 10, winrate: '54%' }
   ];
 
-  trackedPlayers = [
-    { name: 'DG SupportMain', relation: 'Amigo', lane: 'SUP' },
-    { name: 'JunglerX', relation: 'Match reciente', lane: 'JG' },
-    { name: 'TopPunisher', relation: 'Match reciente', lane: 'TOP' }
+  friends = [
+    { name: 'DG SupportMain', lane: 'SUP', status: 'En juego' },
+    { name: 'MidControl', lane: 'MID', status: 'Disponible' },
+    { name: 'BlueSmiter', lane: 'JG', status: 'Offline' }
   ];
+
+  recentPlayers = [
+    { name: 'JunglerX', lane: 'JG', result: 'Victoria juntos' },
+    { name: 'TopPunisher', lane: 'TOP', result: 'Derrota contra' },
+    { name: 'ADC Burst', lane: 'ADC', result: 'Victoria contra' }
+  ];
+
+  friendRequestRiotId = '';
+  friendRequestMessage: string | null = null;
+  friendRequestError: string | null = null;
+  sentFriendRequests: Array<{ riotId: string; status: string }> = [];
 
   championMasteries = [
     { champion: 'Jinx', mastery: 7, points: '289.450', winrate: '61%' },
@@ -192,5 +204,35 @@ export class DashboardComponent {
     }
     this.menuOpen = false;
     this.router.navigate(['/admin']);
+  }
+
+  sendFriendRequest() {
+    this.friendRequestError = null;
+    this.friendRequestMessage = null;
+
+    const riotId = this.friendRequestRiotId.trim();
+    if (!riotId) {
+      this.friendRequestError = 'Introduce un Riot ID.';
+      return;
+    }
+
+    if (!riotId.includes('#')) {
+      this.friendRequestError = 'El Riot ID debe tener formato gameName#tagLine.';
+      return;
+    }
+
+    const alreadyFriend = this.friends.some(
+      friend => friend.name.toLowerCase() === riotId.toLowerCase()
+    );
+
+    if (alreadyFriend) {
+      this.friendRequestError = 'Ese jugador ya está en tu lista de amigos.';
+      return;
+    }
+
+    this.sentFriendRequests.unshift({ riotId, status: 'Pendiente' });
+    this.friendRequestMessage =
+      'Solicitud registrada. Cuando esté el endpoint de amigos, se enviará al backend.';
+    this.friendRequestRiotId = '';
   }
 }
