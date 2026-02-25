@@ -15,8 +15,24 @@ body {
 body {
 	margin: 0;
 	font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
-	background: radial-gradient(circle at top, #1a1f2b 0%, #0f1218 55%, #0b0e13 100%);
+	background:
+		radial-gradient(circle at 8% 10%, rgba(151, 71, 255, 0.22), transparent 35%),
+		radial-gradient(circle at 90% 80%, rgba(0, 240, 255, 0.14), transparent 34%),
+		radial-gradient(circle at top, #171625 0%, #0d0f18 58%, #080a10 100%);
 	color: #e6e9f0;
+}
+
+:root {
+	--dg-bg-0: #080a10;
+	--dg-bg-1: #101424;
+	--dg-bg-2: #171d31;
+	--dg-border: #2b3450;
+	--dg-text: #e9edff;
+	--dg-muted: #9ba6c8;
+	--dg-primary: #9747ff;
+	--dg-secondary: #00d7ff;
+	--dg-accent: #ff3d9a;
+	--dg-glow: rgba(151, 71, 255, 0.28);
 }
 
 // Use inherited font styles for form elements.

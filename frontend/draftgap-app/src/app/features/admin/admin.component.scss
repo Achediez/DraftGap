@@ -1,202 +1,244 @@
-/* Modal para añadir usuario */
-.add-user-modal-backdrop {
+.admin-container {
+  max-width: 980px;
+  margin: 1.4rem auto;
+  padding: 1.2rem;
+  background: linear-gradient(160deg, rgba(14, 18, 32, 0.95), rgba(10, 13, 22, 0.95));
+  color: var(--dg-text);
+  border: 1px solid var(--dg-border);
+  border-radius: 14px;
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.34);
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.admin-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.admin-logo {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 10px rgba(151, 71, 255, 0.45));
+}
+
+.admin-header h2 {
+  margin: 0;
+  color: #f5f1ff;
+}
+
+.back-dashboard-btn,
+.open-add-user-btn,
+.sync-btn,
+.add-user-actions button,
+.action-btn {
+  border: 1px solid var(--dg-border);
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0.5rem 0.9rem;
+}
+
+.back-dashboard-btn,
+.open-add-user-btn,
+.sync-btn,
+.add-user-actions button[type='submit'] {
+  background: linear-gradient(135deg, var(--dg-primary), var(--dg-secondary));
+  color: #090d16;
+  box-shadow: 0 0 14px var(--dg-glow);
+}
+
+.back-dashboard-btn:hover,
+.open-add-user-btn:hover,
+.sync-btn:hover,
+.add-user-actions button[type='submit']:hover {
+  filter: brightness(1.05);
+}
+
+.sync-btn:disabled,
+button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.user-actions {
+  margin-bottom: 1rem;
+}
+
+.admin-actions-row {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.admin-actions-row .sync-btn {
+  margin-left: auto;
+}
+
+.success-msg,
+.error-msg {
+  margin-top: 0.55rem;
+  font-size: 0.9rem;
+}
+
+.success-msg {
+  color: #83f2bc;
+}
+
+.error-msg {
+  color: #ff9aaa;
+}
+
+.user-list {
+  background: var(--dg-bg-1);
+  border: 1px solid var(--dg-border);
+  border-radius: 12px;
+  padding: 0.8rem;
+  overflow-x: auto;
+}
+
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.users-table th,
+.users-table td {
+  text-align: left;
+  padding: 0.55rem 0.35rem;
+  border-bottom: 1px solid #2b3247;
+}
+
+.users-table th {
+  color: #b8ebff;
+}
+
+.action-btn {
+  background: #161b29;
+  color: #dce3f8;
+  margin-right: 0.35rem;
+}
+
+.action-btn:hover {
+  border-color: var(--dg-secondary);
+}
+
+.add-user-modal-backdrop,
+.user-modal-backdrop {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.4);
+  inset: 0;
+  background: rgba(4, 6, 10, 0.68);
   z-index: 1000;
 }
-.add-user-modal {
+
+.add-user-modal,
+.user-modal {
   position: fixed;
-  top: 50%; left: 50%;
+  top: 50%;
+  left: 50%;
   transform: translate(-50%, -50%);
-  background: #23272f;
-  color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+  background: var(--dg-bg-1);
+  color: var(--dg-text);
+  border: 1px solid var(--dg-border);
+  border-radius: 14px;
+  box-shadow: 0 0 26px rgba(151, 71, 255, 0.28);
   z-index: 1001;
-  min-width: 320px;
-  max-width: 90vw;
-  padding: 0;
+  min-width: 340px;
+  max-width: 92vw;
 }
+
+.add-user-form,
+.user-modal-content {
+  padding: 1.4rem;
+}
+
 .add-user-form {
-  padding: 2rem 2.5rem 1.5rem 2.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+  display: grid;
+  gap: 0.75rem;
 }
-.add-user-form h3 {
-  margin-top: 0;
-  margin-bottom: 1rem;
-  font-size: 1.3rem;
-  color: #ffe156;
+
+.add-user-form h3,
+.user-modal-content h3 {
+  margin: 0 0 0.3rem;
 }
-.add-user-form input[type="email"],
-.add-user-form input[type="text"],
-.add-user-form input[type="password"] {
-  background: #181c22;
-  border: 1px solid #3fa7ff;
-  color: #fff;
-  border-radius: 6px;
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
+
+.add-user-form input[type='email'],
+.add-user-form input[type='text'],
+.add-user-form input[type='password'] {
+  background: #0f1525;
+  border: 1px solid var(--dg-border);
+  color: var(--dg-text);
+  border-radius: 8px;
+  padding: 0.56rem 0.7rem;
 }
-.add-user-form input[type="email"]:focus,
-.add-user-form input[type="text"]:focus,
-.add-user-form input[type="password"]:focus {
+
+.add-user-form input:focus {
   outline: none;
-  border-color: #00bba3;
+  border-color: var(--dg-primary);
+  box-shadow: 0 0 0 3px rgba(151, 71, 255, 0.2);
 }
+
 .admin-checkbox {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
+
 .add-user-actions {
   display: flex;
-  gap: 1rem;
-  margin-top: 0.5rem;
+  gap: 0.6rem;
 }
-.open-add-user-btn {
-  background: #3fa7ff;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 0.5rem 1.2rem;
-  font-size: 1rem;
-  cursor: pointer;
-  margin-bottom: 1rem;
-  transition: background 0.2s;
+
+.add-user-actions button[type='button'] {
+  background: #1a2031;
+  color: #dce3f8;
 }
-.open-add-user-btn:hover {
-  background: #00bba3;
-}
-/* Modal de usuario */
-.user-modal-backdrop {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.4);
-  z-index: 1000;
-}
-.user-modal {
-  position: fixed;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  background: #23272f;
-  color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
-  z-index: 1001;
-  min-width: 320px;
-  max-width: 90vw;
-  padding: 0;
-}
+
 .user-modal-content {
-  padding: 2rem 2.5rem 1.5rem 2.5rem;
   position: relative;
 }
+
 .close-modal-btn {
   position: absolute;
-  top: 1rem;
-  right: 1rem;
-  background: none;
+  top: 0.55rem;
+  right: 0.7rem;
+  background: transparent;
+  color: #dce3f8;
   border: none;
-  color: #fff;
-  font-size: 2rem;
+  font-size: 1.6rem;
   cursor: pointer;
 }
+
 .user-modal-details {
-  margin-top: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-.admin-container {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 2rem;
-  background: #23263a;
-  color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.2);
-}
-.admin-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-.back-dashboard-btn {
-  background: #3fa7ff;
-  color: #fff;
-  border: none;
-  padding: 0.5rem 1.2rem;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: bold;
-  font-size: 1rem;
-  transition: background 0.15s;
-}
-.back-dashboard-btn:hover {
-  background: #00bba3;
-}
-.user-actions {
-  margin-bottom: 1.5rem;
+  display: grid;
+  gap: 0.4rem;
+  color: #c4d0eb;
 }
 
-.admin-actions-row {
-  display: flex;
-  gap: 0.8rem;
-  flex-wrap: wrap;
-  align-items: center;
-}
+@media (max-width: 680px) {
+  .admin-container {
+    padding: 0.9rem;
+  }
 
-.admin-actions-row .open-add-user-btn,
-.admin-actions-row .sync-btn {
-  margin-bottom: 0;
-  min-height: 38px;
-  display: inline-flex;
-  align-items: center;
-}
+  .admin-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 
-.sync-btn {
-  background: #ffe156;
-  color: #1f2430;
-  margin-left: auto;
-}
+  .admin-actions-row {
+    width: 100%;
+  }
 
-.sync-btn:hover {
-  background: #f5df8b;
-}
-
-.sync-btn:disabled {
-  opacity: 0.75;
-  cursor: not-allowed;
-}
-
-.success-msg {
-  margin-top: 0.7rem;
-  color: #7CFC98;
-}
-
-.error-msg {
-  margin-top: 0.7rem;
-  color: #ff8a8a;
-}
-
-.user-list {
-  background: #181a20;
-  padding: 1rem;
-  border-radius: 8px;
-}
-button {
-  background: #00bba3;
-  color: #fff;
-  border: none;
-  padding: 0.5rem 1.2rem;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: bold;
-}
-button:hover {
-  background: #009e8a;
+  .admin-actions-row .sync-btn {
+    margin-left: 0;
+  }
 }

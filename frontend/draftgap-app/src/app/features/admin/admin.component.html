@@ -3,7 +3,7 @@
 <div class="user-modal" *ngIf="selectedUser">
   <div class="user-modal-content">
     <button class="close-modal-btn" (click)="selectedUser = null">&times;</button>
-    <h3>Perfil de usuario</h3>
+    <h3>Ficha de usuario</h3>
     <div class="user-modal-details">
       <div><strong>Email:</strong> {{ selectedUser.email }}</div>
       <div><strong>Riot ID:</strong> {{ selectedUser.riotId }}</div>
@@ -16,8 +16,11 @@
 </div>
 <div class="admin-container">
   <div class="admin-header">
-    <h2>Panel de Administración</h2>
-    <button class="back-dashboard-btn" (click)="goToDashboard()">Volver al Dashboard</button>
+    <div class="admin-brand">
+      <img class="admin-logo" src="/content/morado.png" alt="DraftGap logo" />
+      <h2>Centro de Administración</h2>
+    </div>
+    <button class="back-dashboard-btn" (click)="goToDashboard()">Volver al panel principal</button>
   </div>
   <div class="user-actions">
     <div class="admin-actions-row">

@@ -1,15 +1,16 @@
 <div class="dashboard-container">
   <div *ngIf="!user || !user.email" class="dashboard-loading">
     <div class="loading-spinner"></div>
-    <h2>¡Bienvenido a DraftGap!</h2>
-    <p>Cargando tu perfil y estadísticas...</p>
+    <h2>Inicializando DraftGap...</h2>
+    <p>Cargando perfil competitivo y datos recientes.</p>
   </div>
 
   <ng-container *ngIf="user && user.email">
     <header class="dashboard-topbar">
       <div class="brand-block">
+        <img class="brand-logo" src="/content/morado.png" alt="DraftGap logo" />
         <h1>DraftGap</h1>
-        <p>Rendimiento, decisiones y progreso en una sola vista.</p>
+        <p>Rendimiento, decisiones y progreso competitivo en un solo panel.</p>
       </div>
 
       <div class="user-menu">
@@ -47,13 +48,13 @@
       <button [class.active]="activeSection === 'ranked'" (click)="activeSection = 'ranked'">Ranked</button>
       <button [class.active]="activeSection === 'jugadores'" (click)="activeSection = 'jugadores'">Jugadores</button>
       <button [class.active]="activeSection === 'graficos'" (click)="activeSection = 'graficos'">Gráficos</button>
-      <button [class.active]="activeSection === 'chatbot'" (click)="activeSection = 'chatbot'">Chatbot / Personal Trainer</button>
+      <button [class.active]="activeSection === 'chatbot'" (click)="activeSection = 'chatbot'">Coach IA</button>
     </nav>
 
     <section *ngIf="activeSection === 'historial'" class="content-grid">
       <aside class="side-panel">
         <div class="panel-block">
-          <h3>Ranked snapshot</h3>
+          <h3>Snapshot ranked</h3>
           <p class="tier">{{ rankedOverview.tier }} · {{ rankedOverview.lp }} LP</p>
           <p>MMR estimado: {{ rankedOverview.mmr }}</p>
           <p>Ganancia/Pérdida: {{ rankedOverview.lpDelta }}</p>
@@ -74,7 +75,7 @@
         </div>
 
         <div class="panel-block">
-          <h3>Players recientes</h3>
+          <h3>Rivales y aliados recientes</h3>
           <ul>
             <li *ngFor="let p of recentPlayers">{{ p.name }} · {{ p.lane }} · {{ p.result }}</li>
           </ul>
@@ -109,7 +110,7 @@
     </section>
 
     <section *ngIf="activeSection === 'campeones'" class="section-card">
-      <h3>Campeones · Maestría y rendimiento</h3>
+      <h3>Campeones · Maestría y rendimiento real</h3>
       <table>
         <thead>
           <tr>
@@ -131,7 +132,7 @@
     </section>
 
     <section *ngIf="activeSection === 'ranked'" class="section-card">
-      <h3>Ranked · Elo, MMR y LP</h3>
+      <h3>Ranked · Elo, MMR y eficiencia de LP</h3>
       <div class="ranked-grid">
         <article>
           <span>Tier actual</span>
@@ -153,7 +154,7 @@
     </section>
 
     <section *ngIf="activeSection === 'jugadores'" class="section-card">
-      <h3>Jugadores</h3>
+      <h3>Jugadores · red competitiva</h3>
       <div class="players-section-grid">
         <article class="players-category">
           <h4>Amigos</h4>
@@ -203,7 +204,7 @@
     </section>
 
     <section *ngIf="activeSection === 'graficos'" class="section-card">
-      <h3>Gráficos</h3>
+      <h3>Gráficos · lectura de rendimiento</h3>
       <div class="placeholder-grid">
         <article>Rendimiento por partida</article>
         <article>Winrate por campeón</article>
@@ -212,12 +213,12 @@
     </section>
 
     <section *ngIf="activeSection === 'chatbot'" class="section-card">
-      <h3>Chatbot / Personal Trainer</h3>
-      <p>Próximamente: asistente IA para análisis de partidas, rutinas de mejora y recomendaciones personalizadas.</p>
+      <h3>Coach IA</h3>
+      <p>Próximamente: asistente para revisión de partidas, planes de mejora y recomendaciones tácticas personalizadas.</p>
     </section>
 
     <div *ngIf="isAdmin" class="admin-section">
-      <a class="admin-link" (click)="goToAdmin($event)" href="#">Ir a panel de administración</a>
+      <a class="admin-link" (click)="goToAdmin($event)" href="#">Abrir centro de administración</a>
     </div>
   </ng-container>
 </div>

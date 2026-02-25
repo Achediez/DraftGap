@@ -1,98 +1,101 @@
 <div class="auth-page">
-  <div class="auth-card">
-    <div class="auth-header">
-      <h1>DraftGap</h1>
-      <p>Accede con tu cuenta y tu Riot ID.</p>
-    </div>
+  <div class="auth-shell">
+    <section class="brand-panel">
+      <img class="brand-logo" src="/content/morado.png" alt="DraftGap logo" />
+      <div class="brand-kicker">DraftGap Platform</div>
+      <h1>Convierte datos de solo queue en decisiones competitivas.</h1>
+      <p>
+        Tu perfil, tus partidas y tus métricas en un entorno profesional, afilado y preparado para escalar con IA.
+      </p>
+      <ul>
+        <li>Lectura rápida de forma y rendimiento</li>
+        <li>Seguimiento ranked orientado a mejora</li>
+        <li>Base para coaching con agente IA</li>
+      </ul>
+    </section>
 
-    <div class="auth-tabs">
-      <button
-        type="button"
-        [class.active]="mode() === 'login'"
-        (click)="setMode('login')"
-      >
-        Iniciar sesión
-      </button>
-      <button
-        type="button"
-        [class.active]="mode() === 'register'"
-        (click)="setMode('register')"
-      >
-        Registrarse
-      </button>
-    </div>
+    <section class="auth-card">
+      <div class="auth-header">
+        <h2>Acceso a DraftGap</h2>
+        <p>Inicia sesión o crea tu cuenta para activar tu perfil competitivo.</p>
+      </div>
 
-    <div class="auth-messages" *ngIf="errorMessage() || successMessage()">
-      <p class="error" *ngIf="errorMessage()">{{ errorMessage() }}</p>
-      <p class="success" *ngIf="successMessage()">{{ successMessage() }}</p>
-    </div>
+      <div class="auth-tabs">
+        <button type="button" [class.active]="mode() === 'login'" (click)="setMode('login')">
+          Iniciar sesión
+        </button>
+        <button type="button" [class.active]="mode() === 'register'" (click)="setMode('register')">
+          Registrarse
+        </button>
+      </div>
 
-    <form class="auth-form" *ngIf="mode() === 'login'" [formGroup]="loginForm" (ngSubmit)="submitLogin()">
-      <label>
-        Email
-        <input type="email" formControlName="email" placeholder="tu@email.com" />
-        <span class="field-error" *ngIf="loginForm.controls.email.touched && loginForm.controls.email.invalid">
-          Email inválido.
-        </span>
-      </label>
+      <div class="auth-messages" *ngIf="errorMessage() || successMessage()">
+        <p class="error" *ngIf="errorMessage()">{{ errorMessage() }}</p>
+        <p class="success" *ngIf="successMessage()">{{ successMessage() }}</p>
+      </div>
 
-      <label>
-        Contraseña
-        <input type="password" formControlName="password" placeholder="••••••" />
-        <span class="field-error" *ngIf="loginForm.controls.password.touched && loginForm.controls.password.invalid">
-          Mínimo 6 caracteres.
-        </span>
-      </label>
+      <form class="auth-form" *ngIf="mode() === 'login'" [formGroup]="loginForm" (ngSubmit)="submitLogin()">
+        <label>
+          Email
+          <input type="email" formControlName="email" placeholder="tu@email.com" />
+          <span class="field-error" *ngIf="loginForm.controls.email.touched && loginForm.controls.email.invalid">
+            Email inválido.
+          </span>
+        </label>
 
-      <button class="primary" type="submit" [disabled]="isSubmitting()">
-        {{ isSubmitting() ? 'Entrando...' : 'Entrar' }}
-      </button>
-    </form>
+        <label>
+          Contraseña
+          <input type="password" formControlName="password" placeholder="••••••" />
+          <span class="field-error" *ngIf="loginForm.controls.password.touched && loginForm.controls.password.invalid">
+            Mínimo 6 caracteres.
+          </span>
+        </label>
 
-    <form
-      class="auth-form"
-      *ngIf="mode() === 'register'"
-      [formGroup]="registerForm"
-      (ngSubmit)="submitRegister()"
-    >
-      <label>
-        Email
-        <input type="email" formControlName="email" placeholder="tu@email.com" />
-        <span class="field-error" *ngIf="registerForm.controls.email.touched && registerForm.controls.email.invalid">
-          Email inválido.
-        </span>
-      </label>
+        <button class="primary" type="submit" [disabled]="isSubmitting()">
+          {{ isSubmitting() ? 'Entrando...' : 'Entrar' }}
+        </button>
+      </form>
 
-      <label>
-        Contraseña
-        <input type="password" formControlName="password" placeholder="Mínimo 6 caracteres" />
-        <span class="field-error" *ngIf="registerForm.controls.password.touched && registerForm.controls.password.invalid">
-          Mínimo 6 caracteres.
-        </span>
-      </label>
+      <form class="auth-form" *ngIf="mode() === 'register'" [formGroup]="registerForm" (ngSubmit)="submitRegister()">
+        <label>
+          Email
+          <input type="email" formControlName="email" placeholder="tu@email.com" />
+          <span class="field-error" *ngIf="registerForm.controls.email.touched && registerForm.controls.email.invalid">
+            Email inválido.
+          </span>
+        </label>
 
-      <label>
-        Riot ID
-        <input type="text" formControlName="riotId" placeholder="GameName#TAG" />
-        <span class="field-error" *ngIf="registerForm.controls.riotId.touched && registerForm.controls.riotId.invalid">
-          Formato requerido: GameName#TAG.
-        </span>
-      </label>
+        <label>
+          Contraseña
+          <input type="password" formControlName="password" placeholder="Mínimo 6 caracteres" />
+          <span class="field-error" *ngIf="registerForm.controls.password.touched && registerForm.controls.password.invalid">
+            Mínimo 6 caracteres.
+          </span>
+        </label>
 
-      <label>
-        Región
-        <select formControlName="region">
-          <option *ngFor="let region of regions" [value]="region.value">{{ region.label }}</option>
-        </select>
-      </label>
+        <label>
+          Riot ID
+          <input type="text" formControlName="riotId" placeholder="GameName#TAG" />
+          <span class="field-error" *ngIf="registerForm.controls.riotId.touched && registerForm.controls.riotId.invalid">
+            Formato requerido: GameName#TAG.
+          </span>
+        </label>
 
-      <button class="primary" type="submit" [disabled]="isSubmitting()">
-        {{ isSubmitting() ? 'Creando...' : 'Crear cuenta' }}
-      </button>
-    </form>
+        <label>
+          Región
+          <select formControlName="region">
+            <option *ngFor="let region of regions" [value]="region.value">{{ region.label }}</option>
+          </select>
+        </label>
 
-    <div class="auth-footer">
-      <span>Usa el Swagger del backend si quieres probar los endpoints directamente.</span>
-    </div>
+        <button class="primary" type="submit" [disabled]="isSubmitting()">
+          {{ isSubmitting() ? 'Creando...' : 'Crear cuenta' }}
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        <span>DraftGap · Competitive Intelligence for League players.</span>
+      </div>
+    </section>
   </div>
 </div>
