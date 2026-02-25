@@ -142,6 +142,47 @@
 .user-actions {
   margin-bottom: 1.5rem;
 }
+
+.admin-actions-row {
+  display: flex;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.admin-actions-row .open-add-user-btn,
+.admin-actions-row .sync-btn {
+  margin-bottom: 0;
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.sync-btn {
+  background: #ffe156;
+  color: #1f2430;
+  margin-left: auto;
+}
+
+.sync-btn:hover {
+  background: #f5df8b;
+}
+
+.sync-btn:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+.success-msg {
+  margin-top: 0.7rem;
+  color: #7CFC98;
+}
+
+.error-msg {
+  margin-top: 0.7rem;
+  color: #ff8a8a;
+}
+
 .user-list {
   background: #181a20;
   padding: 1rem;

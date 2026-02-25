@@ -20,6 +20,13 @@ export class AdminApiService {
     return this.http.delete(`${this.baseUrl}/users/${userId}`);
   }
 
+  triggerSync(): Observable<any> {
+    return this.http.post(`${this.baseUrl}/sync`, {
+      syncType: 'FULL_SYNC',
+      forceRefresh: false
+    });
+  }
+
   /**
    * Crea un usuario usando el endpoint de registro oficial (AuthController)
    * Permite marcar como admin si el backend lo soporta por email o flag.

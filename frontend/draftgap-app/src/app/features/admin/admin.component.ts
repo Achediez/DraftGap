@@ -24,6 +24,9 @@ export class AdminComponent implements OnInit {
   newUser: any = { email: '', riotId: '', region: '', password: '', isAdmin: false };
   addUserError: string | null = null;
   addUserSuccess = false;
+  syncLoading = false;
+  syncMessage: string | null = null;
+  syncError: string | null = null;
 
   constructor(private router: Router, private adminApi: AdminApiService, private cdr: ChangeDetectorRef) {
     // Si no es admin, redirige al dashboard
@@ -68,6 +71,25 @@ export class AdminComponent implements OnInit {
         } else {
           this.addUserError = 'Error al añadir usuario';
         }
+      }
+    });
+  }
+
+  triggerSync() {
+    this.syncLoading = true;
+    this.syncMessage = null;
+    this.syncError = null;
+
+    this.adminApi.triggerSync().subscribe({
+      next: (response) => {
+        const jobsCreated = response?.jobsCreated ?? 0;
+        this.syncMessage = `Sync lanzada correctamente. Trabajos en cola: ${jobsCreated}.`;
+        this.syncLoading = false;
+        this.loadUsers();
+      },
+      error: (err) => {
+        this.syncError = err?.error?.error || 'Error al lanzar la sincronización';
+        this.syncLoading = false;
       }
     });
   }

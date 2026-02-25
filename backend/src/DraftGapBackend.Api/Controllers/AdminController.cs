@@ -74,6 +74,8 @@ public class AdminController : ControllerBase
     {
         try
         {
+            request ??= new SyncRequest();
+
             _logger.LogInformation(
                 "Admin triggered sync. SyncType={SyncType}, ForceRefresh={ForceRefresh}",
                 request.SyncType, request.ForceRefresh);
@@ -115,6 +117,11 @@ public class AdminController : ControllerBase
                     createdAt = j.CreatedAt
                 })
             });
+        }
+        catch (DbUpdateException ex)
+        {
+            _logger.LogError(ex, "Sync trigger failed due to database constraints.");
+            return BadRequest(new { error = "Failed to enqueue sync jobs due to inconsistent player data." });
         }
         catch (InvalidOperationException ex)
         {

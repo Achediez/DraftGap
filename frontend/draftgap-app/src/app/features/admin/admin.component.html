@@ -20,7 +20,14 @@
     <button class="back-dashboard-btn" (click)="goToDashboard()">Volver al Dashboard</button>
   </div>
   <div class="user-actions">
-    <button class="open-add-user-btn" (click)="showAddUser = true" *ngIf="!showAddUser">Añadir usuario</button>
+    <div class="admin-actions-row">
+      <button class="open-add-user-btn" (click)="showAddUser = true" *ngIf="!showAddUser">Añadir usuario</button>
+      <button class="sync-btn" (click)="triggerSync()" [disabled]="syncLoading">
+        {{ syncLoading ? 'Sincronizando...' : 'Sincronizar datos Riot' }}
+      </button>
+    </div>
+    <div *ngIf="syncMessage" class="success-msg">{{ syncMessage }}</div>
+    <div *ngIf="syncError" class="error-msg">{{ syncError }}</div>
     <div *ngIf="showAddUser" class="add-user-modal-backdrop" (click)="showAddUser = false"></div>
     <div *ngIf="showAddUser" class="add-user-modal">
       <form class="add-user-form" (ngSubmit)="addUser()" #userForm="ngForm" (click)="$event.stopPropagation()">

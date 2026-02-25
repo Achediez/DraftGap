@@ -38,8 +38,14 @@ public class DataSyncService : IDataSyncService
     public async Task<SyncTriggerResult> TriggerSyncForAllUsersAsync()
     {
         var users = await _userRepository.GetAllActiveUsersAsync();
+        var validPlayerPuuids = await _context.Players
+            .Select(p => p.Puuid)
+            .ToHashSetAsync();
+
         var eligibleUsers = users
-            .Where(u => !string.IsNullOrEmpty(u.RiotPuuid))
+            .Where(u =>
+                !string.IsNullOrEmpty(u.RiotPuuid) &&
+                validPlayerPuuids.Contains(u.RiotPuuid!))
             .ToList();
 
         var createdJobs = new List<SyncJob>();
@@ -91,6 +97,13 @@ public class DataSyncService : IDataSyncService
 
         if (string.IsNullOrEmpty(user.RiotPuuid))
             throw new InvalidOperationException($"User {userId} has no linked Riot account.");
+
+        var playerExists = await _context.Players
+            .AnyAsync(p => p.Puuid == user.RiotPuuid);
+
+        if (!playerExists)
+            throw new InvalidOperationException(
+                $"User {userId} is missing player profile for PUUID {user.RiotPuuid}. Re-link Riot account before syncing.");
 
         var job = new SyncJob
         {
