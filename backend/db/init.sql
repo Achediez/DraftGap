@@ -779,7 +779,7 @@ DELIMITER ;
 
 
 -- =====================================================
--- Initial Admin User (Change password immediately!)
+-- Initial Admin User
 -- =====================================================
 
 -- Password: 'AdminTest123'
@@ -788,8 +788,8 @@ VALUES ('aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb', 'admin@draftgap.local', '$2a$12$
 
 INSERT INTO `users` (`user_id`, `email`, `password_hash`, `riot_id`, `riot_puuid`, `is_active`, `region`)
 VALUES
-('bbbbbbbb-0000-1111-2222-cccccccccccc', 'ggg@draftgap.local', '$2a$12$i5pRBHCbqnrfCMsXmw6/1e2hz4/FgKWXTsdMV5B5.vpEHxsNwYOTe', "DG Pr0m1sTeR#GGG", "urf7Ia1n2eDZN0SImfpBP-PKn1aTF33hnwj8GbSYzubiFuz8yUdziynX_3YfmtvpNZL559gPge6GRw", TRUE, "euw1"),
-('cccccccc-0000-1111-2222-dddddddddddd', 'h10@draftgap.local', '$2a$12$i5pRBHCbqnrfCMsXmw6/1e2hz4/FgKWXTsdMV5B5.vpEHxsNwYOTe', "DG Achediez#H10", "0I3jROQVtOoz88pkDUpYztTB5VEvxIWgLjwJWOwEP0xueXE95Dl4OdZjW-5CnBBTP_gHCrHkfXkmYg", TRUE, "euw1");
+('bbbbbbbb-0000-1111-2222-cccccccccccc', 'ggg@draftgap.local', '$2a$12$i5pRBHCbqnrfCMsXmw6/1e2hz4/FgKWXTsdMV5B5.vpEHxsNwYOTe', "DG Pr0m1sTeR#GGG", "urf7Ia1n2eDZN0SImfpBP-PKn1aTF33hnwj8GbSYzubiFuz8yUdziynX_3YfmtvpNZL559gPge6GRw", TRUE, "euw"),
+('cccccccc-0000-1111-2222-dddddddddddd', 'h10@draftgap.local', '$2a$12$i5pRBHCbqnrfCMsXmw6/1e2hz4/FgKWXTsdMV5B5.vpEHxsNwYOTe', "DG Achediez#H10", "0I3jROQVtOoz88pkDUpYztTB5VEvxIWgLjwJWOwEP0xueXE95Dl4OdZjW-5CnBBTP_gHCrHkfXkmYg", TRUE, "euw");
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
