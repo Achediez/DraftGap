@@ -168,6 +168,10 @@ export class DashboardApiService {
     return this.http.get<PaginatedMatchesResponse>(`${this.baseUrl}/matches?page=${page}&pageSize=${pageSize}`);
   }
 
+  triggerSync(): Observable<{ status?: string; message?: string }> {
+    return this.http.post<{ status?: string; message?: string }>(`${this.baseUrl}/sync/trigger`, {});
+  }
+
   searchUserByRiotId(riotId: string): Observable<{ userId: string; riotId: string; isActive: boolean }> {
     return this.http.post<{ userId: string; riotId: string; isActive: boolean }>(`${this.baseUrl}/friends/search`, {
       riotId

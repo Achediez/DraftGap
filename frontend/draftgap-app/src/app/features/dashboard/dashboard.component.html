@@ -30,6 +30,11 @@
         <div class="profile-info">
           <h2>{{ user.riotId || '-' }}</h2>
           <div class="region" *ngIf="user.region">{{ user.region }}</div>
+          <button class="refresh-data-btn" type="button" [disabled]="syncLoading" (click)="refreshProfileData()">
+            {{ syncLoading ? 'Actualizando...' : 'Actualizar datos' }}
+          </button>
+          <p *ngIf="syncMessage" class="sync-feedback sync-feedback-ok">{{ syncMessage }}</p>
+          <p *ngIf="syncError" class="sync-feedback sync-feedback-error">{{ syncError }}</p>
         </div>
       </div>
 

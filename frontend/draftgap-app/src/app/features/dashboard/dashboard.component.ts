@@ -50,6 +50,9 @@ export class DashboardComponent {
   friendRequestMessage: string | null = null;
   friendRequestError: string | null = null;
   sentFriendRequests: Array<{ riotId: string; status: string }> = [];
+  syncLoading = false;
+  syncMessage: string | null = null;
+  syncError: string | null = null;
 
   championMasteries: Array<{ champion: string; mastery: number; points: string; winrate: string }> = [];
 
@@ -95,7 +98,7 @@ export class DashboardComponent {
   private loadDashboardData(): void {
     forkJoin({
       profile: this.dashboardApi.getProfile(),
-      summary: this.dashboardApi.getDashboardSummary(),
+      summary: this.dashboardApi.getDashboardSummary().pipe(catchError(() => of(null))),
       champions: this.dashboardApi.getChampionStats().pipe(catchError(() => of([]))),
       ranked: this.dashboardApi.getRankedStats().pipe(catchError(() => of(null))),
       matches: this.dashboardApi.getMatches(1, 12).pipe(catchError(() => of(null)))
@@ -117,7 +120,7 @@ export class DashboardComponent {
         this.isAdmin = profile.isAdmin;
         localStorage.setItem('isAdmin', profile.isAdmin ? '1' : '0');
 
-        const soloQueue = ranked?.soloQueue ?? summary.rankedOverview?.soloQueue;
+        const soloQueue = ranked?.soloQueue ?? summary?.rankedOverview?.soloQueue;
         this.rankedOverview = {
           tier: soloQueue?.tier && soloQueue?.rank ? `${soloQueue.tier} ${soloQueue.rank}` : 'Sin clasificar',
           lp: soloQueue?.leaguePoints ?? 0,
@@ -136,7 +139,7 @@ export class DashboardComponent {
               queueId: match.queueId,
               teamPosition: match.teamPosition
             }))
-          : summary.recentMatches.map(match => ({
+          : (summary?.recentMatches ?? []).map(match => ({
               championName: match.championName,
               win: match.win,
               kills: match.kills,
@@ -157,7 +160,7 @@ export class DashboardComponent {
           date: new Date(match.gameCreation).toLocaleDateString()
         }));
 
-        this.topPicks = summary.topChampions.map(champion => ({
+        this.topPicks = (summary?.topChampions ?? []).map(champion => ({
           champion: champion.championName,
           games: champion.gamesPlayed,
           winrate: `${Math.round(champion.winrate)}%`
@@ -175,11 +178,11 @@ export class DashboardComponent {
         this.summaryCards = [
           {
             label: 'Últimas partidas',
-            value: `${summary.performanceStats?.totalMatches ?? this.recentMatches.length}`
+            value: `${summary?.performanceStats?.totalMatches ?? this.recentMatches.length}`
           },
           {
             label: 'Winrate reciente',
-            value: summary.performanceStats ? `${Math.round(summary.performanceStats.winrate)}%` : this.getRecentWinrate()
+            value: summary?.performanceStats ? `${Math.round(summary.performanceStats.winrate)}%` : this.getRecentWinrate()
           },
           { label: 'LP actual', value: `${this.rankedOverview.lp} LP` },
           {
@@ -301,6 +304,24 @@ export class DashboardComponent {
       },
       error: () => {
         this.friendRequestError = 'No se encontró ese Riot ID en DraftGap.';
+      }
+    });
+  }
+
+  refreshProfileData() {
+    this.syncLoading = true;
+    this.syncMessage = null;
+    this.syncError = null;
+
+    this.dashboardApi.triggerSync().subscribe({
+      next: () => {
+        this.syncLoading = false;
+        this.syncMessage = 'Sincronización iniciada. Los datos se actualizarán en breve.';
+        this.loadDashboardData();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.syncLoading = false;
+        this.syncError = err?.error?.error || 'No se pudo iniciar la sincronización.';
       }
     });
   }
