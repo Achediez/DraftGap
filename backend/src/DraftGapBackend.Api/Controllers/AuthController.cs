@@ -235,22 +235,16 @@ public class AuthController : ControllerBase
         }
     }
 
-    [HttpGet("debug/users")]
-    public async Task<IActionResult> DebugGetAllUsers()
-    {
-        var users = await _userService.GetAllActiveUsersAsync();
-        return Ok(users.Select(u => new
-        {
-            userId = u.UserId,
-            email = u.Email,
-            passwordHashLength = u.PasswordHash?.Length ?? 0,
-            passwordHashPreview = u.PasswordHash?.Substring(0, Math.Min(20, u.PasswordHash.Length)) + "...",
-            riotId = u.RiotId,
-            createdAt = u.CreatedAt
-        }));
-    }
-
+    /// <summary>
+    /// Lista todos los usuarios registrados (solo Admin).
+    /// Incluye información pública: userId, email, riotId, region, lastSync, isAdmin.
+    /// </summary>
+    /// <response code="200">Lista de usuarios obtenida</response>
+    /// <response code="401">Token inválido</response>
+    /// <response code="403">Usuario no tiene rol Admin</response>
+    /// <response code="500">Error interno</response>
     [HttpGet("users")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetAllUsers()
     {
         try

@@ -121,15 +121,33 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 
 // ====================================
+// FLUENTVALIDATION
+// ====================================
+// Registra todos los validadores desde el assembly de Application
+// Los validadores se ejecutan automáticamente en los controladores
+builder.Services.AddValidatorsFromAssemblyContaining<DraftGapBackend.Application.Validators.PaginationRequestValidator>();
+
+// ====================================
 // DEPENDENCY INJECTION
 // ====================================
-// Application layer services
+// ===== APPLICATION LAYER SERVICES =====
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IProfileService, ProfileService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IMatchService, MatchService>();
+builder.Services.AddScoped<IChampionService, ChampionService>();
+builder.Services.AddScoped<IRankedService, RankedService>();
+builder.Services.AddScoped<IFriendsService, FriendsService>();
+builder.Services.AddScoped<IUserSyncService, UserSyncService>();
 
-// Infrastructure layer repositories
+// ===== INFRASTRUCTURE LAYER REPOSITORIES =====
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IMatchRepository, MatchRepository>();
+builder.Services.AddScoped<IChampionRepository, ChampionRepository>();
+builder.Services.AddScoped<IRankedRepository, RankedRepository>();
+builder.Services.AddScoped<IPlayerRepository, PlayerRepository>();
 
-// Riot API services with HttpClient factory pattern
+// ===== RIOT API SERVICES =====
 // HttpClient lifetime is managed automatically
 builder.Services.AddHttpClient<IRiotService, RiotService>();
 builder.Services.AddScoped<IRiotService, RiotService>();
@@ -137,6 +155,7 @@ builder.Services.AddScoped<IRiotService, RiotService>();
 // Data Dragon static data service
 builder.Services.AddHttpClient<IDataDragonService, DataDragonService>();
 
+// ===== SYNC SERVICES =====
 // Data sync service consumed by AdminController via IDataSyncService.
 builder.Services.AddScoped<IDataSyncService, DataSyncService>();
 
