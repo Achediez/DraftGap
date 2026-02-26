@@ -1,14 +1,18 @@
-﻿using DraftGapBackend.Application.Interfaces;
+﻿using DraftGapBackend.API.Middleware;
+using DraftGapBackend.Application.Interfaces;
 using DraftGapBackend.Application.Users;
 using DraftGapBackend.Domain.Abstractions;
 using DraftGapBackend.Infrastructure.Data;
 using DraftGapBackend.Infrastructure.Persistence;
 using DraftGapBackend.Infrastructure.Riot;
 using DraftGapBackend.Infrastructure.Sync;
+using DraftGapBackend.Infrastructure.Services;
+using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Reflection;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -262,6 +266,10 @@ Console.WriteLine();
 // HTTP REQUEST PIPELINE MIDDLEWARE
 // ====================================
 // Middleware order matters - authentication must come before authorization
+
+// Global exception handler
+var startupLogger = app.Services.GetRequiredService<ILogger<Program>>();
+app.ConfigureExceptionHandler(startupLogger);
 
 if (app.Environment.IsDevelopment())
 {

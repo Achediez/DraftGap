@@ -1,3 +1,4 @@
+using DraftGapBackend.Application.Admin;
 using DraftGapBackend.Application.Interfaces;
 using DraftGapBackend.Domain.Abstractions;
 using DraftGapBackend.Infrastructure.Data;
@@ -104,19 +105,21 @@ public class AdminController : ControllerBase
                 result = await _dataSyncService.TriggerSyncForAllUsersAsync();
             }
 
-            return Ok(new
+            var response = new SyncTriggerResponseDto
             {
-                jobsCreated = result.JobsCreated,
-                message = result.Message,
-                jobs = result.Jobs.Select(j => new
+                JobsCreated = result.JobsCreated,
+                Message = result.Message,
+                Jobs = result.Jobs.Select(j => new SyncJobInfoDto
                 {
-                    jobId = j.JobId,
-                    userId = j.Puuid,
-                    jobType = j.JobType,
-                    status = j.Status,
-                    createdAt = j.CreatedAt
-                })
-            });
+                    JobId = (int)j.JobId,
+                    UserId = j.Puuid,
+                    JobType = j.JobType,
+                    Status = j.Status,
+                    CreatedAt = j.CreatedAt
+                }).ToList()
+            };
+
+            return Ok(response);
         }
         catch (DbUpdateException ex)
         {
@@ -206,24 +209,27 @@ public class AdminController : ControllerBase
     /// Returns all registered users with their sync state — useful for the admin panel table.
     /// </summary>
     [HttpGet("users")]
-    public async Task<IActionResult> GetAllUsers()
+    public async Task<IActionResult> GetAllUsers(CancellationToken cancellationToken)
     {
         try
         {
             var users = await _userRepository.GetAllActiveUsersAsync();
             var adminEmails = _configuration.GetSection("Admin:AllowedEmails").Get<List<string>>() ?? new List<string>();
 
-            return Ok(users.Select(u => new
+            var userDtos = users.Select(u => new AdminUserDto
             {
-                userId = u.UserId,
-                email = u.Email,
-                riotId = u.RiotId,
-                region = u.Region,
-                lastSync = u.LastSync,
-                hasPuuid = !string.IsNullOrEmpty(u.RiotPuuid),
-                isAdmin = adminEmails.Contains(u.Email),
-                createdAt = u.CreatedAt
-            }));
+                UserId = u.UserId,
+                Email = u.Email,
+                RiotId = u.RiotId,
+                Region = u.Region,
+                LastSync = u.LastSync,
+                HasPuuid = !string.IsNullOrEmpty(u.RiotPuuid),
+                IsAdmin = adminEmails.Contains(u.Email),
+                IsActive = u.IsActive,
+                CreatedAt = u.CreatedAt
+            }).ToList();
+
+            return Ok(userDtos);
         }
         catch (Exception ex)
         {
