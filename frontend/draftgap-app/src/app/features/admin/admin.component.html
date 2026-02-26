@@ -63,6 +63,15 @@
         </tr>
       </thead>
       <tbody>
+        <tr *ngIf="loading">
+          <td colspan="5" class="table-state">Cargando usuarios del sistema...</td>
+        </tr>
+        <tr *ngIf="!loading && error">
+          <td colspan="5" class="table-state table-state-error">No se pudo cargar la lista de usuarios. Inténtalo de nuevo.</td>
+        </tr>
+        <tr *ngIf="!loading && !error && users.length === 0">
+          <td colspan="5" class="table-state">No hay usuarios disponibles todavía.</td>
+        </tr>
         <tr *ngFor="let user of users">
           <td>{{ user.email }}</td>
           <td>{{ user.riotId }}</td>

@@ -63,6 +63,7 @@
           <h3>Top picks</h3>
           <ul>
             <li *ngFor="let pick of topPicks">{{ pick.champion }} · {{ pick.games }} partidas · {{ pick.winrate }}</li>
+            <li *ngIf="topPicks.length === 0" class="empty-state">Sin picks disponibles. Sincroniza tu cuenta para ver tus campeones más jugados.</li>
           </ul>
         </div>
 
@@ -70,6 +71,7 @@
           <h3>Amigos</h3>
           <ul>
             <li *ngFor="let friend of friends">{{ friend.name }} · {{ friend.lane }} · {{ friend.status }}</li>
+            <li *ngIf="friends.length === 0" class="empty-state">Sin contactos registrados por ahora.</li>
           </ul>
         </div>
 
@@ -77,6 +79,7 @@
           <h3>Rivales y aliados recientes</h3>
           <ul>
             <li *ngFor="let p of recentPlayers">{{ p.name }} · {{ p.lane }} · {{ p.result }}</li>
+            <li *ngIf="recentPlayers.length === 0" class="empty-state">Aún no hay historial de jugadores recientes.</li>
           </ul>
         </div>
       </aside>
@@ -103,6 +106,9 @@
               <td>{{ match.mode }}</td>
               <td>{{ match.date }}</td>
             </tr>
+            <tr *ngIf="recentMatches.length === 0">
+              <td colspan="6" class="empty-state">No hay partidas disponibles todavía. Ejecuta una sincronización para cargar el historial.</td>
+            </tr>
           </tbody>
         </table>
       </article>
@@ -125,6 +131,9 @@
             <td>{{ champ.mastery }}</td>
             <td>{{ champ.points }}</td>
             <td>{{ champ.winrate }}</td>
+          </tr>
+          <tr *ngIf="championMasteries.length === 0">
+            <td colspan="4" class="empty-state">Sin estadísticas de campeones por ahora.</td>
           </tr>
         </tbody>
       </table>
@@ -163,6 +172,7 @@
               <span>{{ friend.lane }}</span>
               <span>{{ friend.status }}</span>
             </li>
+            <li *ngIf="friends.length === 0" class="empty-state">Aún no tienes amigos añadidos.</li>
           </ul>
         </article>
 
@@ -174,6 +184,7 @@
               <span>{{ p.lane }}</span>
               <span>{{ p.result }}</span>
             </li>
+            <li *ngIf="recentPlayers.length === 0" class="empty-state">Sin actividad reciente de jugadores.</li>
           </ul>
         </article>
       </div>

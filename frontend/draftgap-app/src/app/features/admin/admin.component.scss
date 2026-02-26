@@ -126,6 +126,18 @@ button:disabled {
   border-bottom: 1px solid #2b3247;
 }
 
+.table-state {
+  color: var(--dg-muted);
+  text-align: center !important;
+  font-style: italic;
+  padding: 0.9rem 0.35rem;
+}
+
+.table-state-error {
+  color: #ff9aaa;
+  font-style: normal;
+}
+
 .users-table th {
   color: #b8ebff;
 }
