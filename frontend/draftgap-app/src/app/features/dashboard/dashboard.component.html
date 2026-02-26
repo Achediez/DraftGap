@@ -29,8 +29,7 @@
         <img class="profile-icon" [src]="user.iconUrl || 'https://ddragon.leagueoflegends.com/cdn/13.24.1/img/profileicon/4419.png'" alt="icono perfil" />
         <div class="profile-info">
           <h2>{{ user.riotId || '-' }}</h2>
-          <div class="region">{{ user.region || '-' }}</div>
-          <div class="email">{{ user.email || '-' }}</div>
+          <div class="region" *ngIf="user.region">{{ user.region }}</div>
         </div>
       </div>
 
