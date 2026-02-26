@@ -2,6 +2,14 @@ using FluentValidation;
 
 namespace DraftGapBackend.Application.Friends;
 
+/// <summary>
+/// Validador para búsqueda de usuario por Riot ID.
+/// Reglas:
+/// - riotId: obligatorio, no vacío
+/// - formato correcto: GameName#TAG
+/// - máximo 16 caracteres antes del #
+/// Ejemplo válido: "Faker#KR1", "TSM Doublelift#NA1"
+/// </summary>
 public class SearchUserRequestValidator : AbstractValidator<SearchUserRequest>
 {
     public SearchUserRequestValidator()

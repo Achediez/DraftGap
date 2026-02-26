@@ -5,10 +5,24 @@ using System.Net;
 namespace DraftGapBackend.API.Middleware;
 
 /// <summary>
-/// Global exception handler middleware
+/// Middleware global para manejo centralizado de excepciones.
+/// Funcionalidades:
+/// - Captura todas las excepciones no manejadas
+/// - Formatea respuestas de error de forma consistente  
+/// - Registra errores con niveles apropiados
+/// - Distingue entre errores de negocio (400) y del servidor (500)
+/// Evita que se filtren detalles internos al cliente en producción.
 /// </summary>
 public static class GlobalExceptionHandler
 {
+    /// <summary>
+    /// Configura el manejo global de excepciones en la aplicación.
+    /// Proceso:
+    /// 1. Captura la excepción del contexto
+    /// 2. Determina el código de estado HTTP apropiado
+    /// 3. Registra el error
+    /// 4. Retorna respuesta JSON formateada
+    /// </summary>
     public static void ConfigureExceptionHandler(this IApplicationBuilder app, ILogger logger)
     {
         app.UseExceptionHandler(appError =>

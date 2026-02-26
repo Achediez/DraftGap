@@ -4,7 +4,14 @@ using System.Collections.Generic;
 namespace DraftGapBackend.Application.Matches;
 
 /// <summary>
-/// Request to filter matches
+/// Filtros opcionales para el historial de partidas.
+/// Todos los campos son opcionales:
+/// - championName: Filtrar por campeón específico
+/// - teamPosition: TOP, JUNGLE, MIDDLE, BOTTOM, UTILITY
+/// - win: true=victorias, false=derrotas, null=todas
+/// - queueId: 420=Ranked Solo, 440=Flex, 0=todas
+/// - startDate/endDate: Rango de fechas
+/// Aplicados en memoria después de la paginación.
 /// </summary>
 public class MatchFilterRequest
 {
@@ -17,7 +24,14 @@ public class MatchFilterRequest
 }
 
 /// <summary>
-/// Detailed match information
+/// DTO con detalles completos de una partida específica.
+/// Incluye:
+/// - Info general: duración, modo, versión del juego
+/// - Resultado por equipo (team100Won/team200Won)
+/// - Todos los participantes (10 jugadores) con stats completas
+/// Usado en: GET /api/matches/{matchId}
+/// </summary>
+public class MatchDetailDto
 /// </summary>
 public class MatchDetailDto
 {

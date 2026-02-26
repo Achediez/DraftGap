@@ -6,7 +6,13 @@ using System.Security.Claims;
 namespace DraftGapBackend.API.Controllers;
 
 /// <summary>
-/// Champion data and statistics
+/// Controlador para datos de campeones y estadísticas.
+/// Endpoints:
+/// - GET /api/champions: Lista completa de campeones (datos estáticos)
+/// - GET /api/champions/{id}: Campeón específico
+/// - GET /api/champions/stats: Estadísticas del usuario por campeón
+/// Requiere autenticación: Sí (JWT Bearer token)
+/// Datos estáticos sincronizados de Data Dragon al iniciar la app.
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
@@ -64,8 +70,17 @@ public class ChampionsController : ControllerBase
     }
 
     /// <summary>
-    /// Get current user's champion statistics
+    /// Obtiene estadísticas de todos los campeones jugados por el usuario.
+    /// Retorna:
+    /// - Nombre e imagen del campeón
+    /// - Partidas jugadas, victorias, derrotas
+    /// - Winrate calculado
+    /// - Promedios de K/D/A y KDA
+    /// Ordenado por cantidad de partidas (más jugados primero)
     /// </summary>
+    /// <response code="200">Estadísticas obtenidas</response>
+    /// <response code="401">Token inválido</response>
+    /// <response code="500">Error interno</response>
     [HttpGet("stats")]
     public async Task<IActionResult> GetUserChampionStats(CancellationToken cancellationToken)
     {

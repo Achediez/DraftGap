@@ -10,6 +10,15 @@ using System.Threading.Tasks;
 
 namespace DraftGapBackend.Infrastructure.Services;
 
+/// <summary>
+/// Servicio para generar el resumen del dashboard del usuario.
+/// Responsabilidades:
+/// - Agregar datos de ranked (Solo/Duo y Flex)
+/// - Obtener últimas partidas jugadas
+/// - Calcular estadísticas de rendimiento (KDA, winrate)
+/// - Identificar top champions más jugados
+/// Combina datos de múltiples tablas: users, player_ranked_stats, match_participants, matches
+/// </summary>
 public class DashboardService : IDashboardService
 {
     private readonly IUserRepository _userRepository;
@@ -29,6 +38,19 @@ public class DashboardService : IDashboardService
         _logger = logger;
     }
 
+    /// <summary>
+    /// Obtiene el resumen completo del dashboard para un usuario.
+    /// Proceso:
+    /// 1. Valida que el usuario tenga PUUID vinculado
+    /// 2. Carga ranked stats de Solo/Duo y Flex
+    /// 3. Obtiene últimas 10 partidas
+    /// 4. Calcula estadísticas de rendimiento (basado en últimas 20 partidas)
+    /// 5. Identifica top 5 champions más jugados (basado en últimas 50 partidas)
+    /// </summary>
+    /// <param name="userId">ID del usuario autenticado</param>
+    /// <param name="cancellationToken">Token de cancelación</param>
+    /// <returns>Resumen completo del dashboard</returns>
+    /// <exception cref="InvalidOperationException">Si el usuario no existe o no tiene cuenta de Riot vinculada</exception>
     public async Task<DashboardSummaryDto> GetDashboardSummaryAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByIdAsync(userId);
@@ -37,7 +59,8 @@ public class DashboardService : IDashboardService
 
         var puuid = user.RiotPuuid;
 
-        // Get ranked stats
+        // ===== SECCIÓN 1: RANKED STATS =====
+        // Obtiene stats de Solo/Duo (RANKED_SOLO_5x5) y Flex (RANKED_FLEX_SR)
         var rankedStats = await _rankedRepository.GetPlayerRankedStatsAsync(puuid, cancellationToken);
         var soloQueue = rankedStats.FirstOrDefault(r => r.QueueType == "RANKED_SOLO_5x5");
         var flexQueue = rankedStats.FirstOrDefault(r => r.QueueType == "RANKED_FLEX_SR");
@@ -48,7 +71,9 @@ public class DashboardService : IDashboardService
             FlexQueue = flexQueue != null ? MapToRankedQueueDto(flexQueue) : null
         };
 
-        // Get recent matches (last 10)
+        // ===== SECCIÓN 2: RECENT MATCHES =====
+        // Obtiene las últimas 10 partidas ordenadas por fecha descendente
+        // Incluye información básica: champion, resultado, KDA, posición
         var recentParticipants = await _matchRepository.GetUserMatchParticipantsAsync(puuid, 0, 10, cancellationToken);
         var recentMatches = recentParticipants.Select(p => new RecentMatchDto
         {
@@ -64,11 +89,15 @@ public class DashboardService : IDashboardService
             TeamPosition = p.TeamPosition
         }).ToList();
 
-        // Get performance stats (last 20 matches)
+        // ===== SECCIÓN 3: PERFORMANCE STATS =====
+        // Calcula estadísticas generales basadas en las últimas 20 partidas
+        // Incluye: total de partidas, wins, losses, winrate, promedios de K/D/A y KDA
         var allParticipants = await _matchRepository.GetUserMatchParticipantsAsync(puuid, 0, 20, cancellationToken);
         var performanceStats = CalculatePerformanceStats(allParticipants);
 
-        // Get top champions (based on last 50 matches)
+        // ===== SECCIÓN 4: TOP CHAMPIONS =====
+        // Identifica los 5 campeones más jugados basado en las últimas 50 partidas
+        // Agrupa por champion y calcula: games, wins, winrate, KDA promedio
         var championParticipants = await _matchRepository.GetUserMatchParticipantsAsync(puuid, 0, 50, cancellationToken);
         var topChampions = championParticipants
             .GroupBy(p => new { p.ChampionId, p.ChampionName })
@@ -94,6 +123,10 @@ public class DashboardService : IDashboardService
         };
     }
 
+    /// <summary>
+    /// Mapea una entidad PlayerRankedStat a DTO de respuesta.
+    /// Calcula winrate y formatea datos para el cliente.
+    /// </summary>
     private RankedQueueDto MapToRankedQueueDto(Domain.Entities.PlayerRankedStat stat)
     {
         return new RankedQueueDto
@@ -109,6 +142,12 @@ public class DashboardService : IDashboardService
         };
     }
 
+    /// <summary>
+    /// Calcula estadísticas de rendimiento agregadas.
+    /// Fórmula KDA: (Kills + Assists) / Deaths (si Deaths > 0, sino Kills + Assists)
+    /// </summary>
+    /// <param name="participants">Lista de participaciones del usuario</param>
+    /// <returns>Estadísticas agregadas o null si no hay partidas</returns>
     private PerformanceStatsDto? CalculatePerformanceStats(System.Collections.Generic.List<Domain.Entities.MatchParticipant> participants)
     {
         if (!participants.Any())

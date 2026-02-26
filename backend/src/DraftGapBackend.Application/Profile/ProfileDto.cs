@@ -3,7 +3,11 @@ using System;
 namespace DraftGapBackend.Application.Profile;
 
 /// <summary>
-/// User profile information response
+/// DTO de perfil de usuario completo.
+/// Combina datos de:
+/// - users table: email, riotId, region, lastSync, createdAt
+/// - players table: summonerName, level, profileIconId (si existe)
+/// Usado en: GET /api/profile
 /// </summary>
 public class ProfileDto
 {
@@ -29,7 +33,12 @@ public class ProfileSummonerDto
 }
 
 /// <summary>
-/// Request to update user profile
+/// Request para actualizar perfil de usuario.
+/// Campos opcionales:
+/// - riotId: Nuevo Riot ID (validado contra Riot API antes de guardar)
+/// - region: Nueva región (debe ser platform ID válido: euw1, na1, etc.)
+/// Validado por: UpdateProfileRequestValidator
+/// Usado en: PUT /api/profile
 /// </summary>
 public class UpdateProfileRequest
 {

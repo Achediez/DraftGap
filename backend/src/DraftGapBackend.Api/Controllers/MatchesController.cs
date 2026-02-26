@@ -9,7 +9,12 @@ using System.Security.Claims;
 namespace DraftGapBackend.API.Controllers;
 
 /// <summary>
-/// Match history and details
+/// Controlador para historial de partidas y detalles.
+/// Endpoints:
+/// - GET /api/matches: Lista paginada con filtros opcionales
+/// - GET /api/matches/{matchId}: Detalles completos de una partida
+/// Requiere autenticación: Sí (JWT Bearer token)
+/// Soporta filtros: champion, position, win/loss, queue, fecha
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
@@ -34,8 +39,25 @@ public class MatchesController : ControllerBase
     }
 
     /// <summary>
-    /// Get paginated match history for current user
+    /// Obtiene historial de partidas del usuario con paginación y filtros.
     /// </summary>
+    /// <param name="page">Número de página (1-based, default: 1)</param>
+    /// <param name="pageSize">Tamaño de página (1-100, default: 10)</param>
+    /// <param name="championName">Filtrar por nombre de campeón (ej: "Aatrox")</param>
+    /// <param name="teamPosition">Filtrar por posición (TOP, JUNGLE, MIDDLE, BOTTOM, UTILITY)</param>
+    /// <param name="win">Filtrar por resultado (true=victorias, false=derrotas)</param>
+    /// <param name="queueId">Filtrar por tipo de cola (420=Ranked Solo, 440=Flex, 0=todas)</param>
+    /// <param name="cancellationToken">Token de cancelación</param>
+    /// <returns>
+    /// Resultado paginado con:
+    /// - items: Array de partidas
+    /// - page, pageSize, totalCount: Metadata de paginación
+    /// - hasNextPage, hasPreviousPage: Flags de navegación
+    /// </returns>
+    /// <response code="200">Matches obtenidos exitosamente</response>
+    /// <response code="400">Parámetros de paginación o filtros inválidos</response>
+    /// <response code="401">Token inválido</response>
+    /// <response code="500">Error interno</response>
     [HttpGet]
     public async Task<IActionResult> GetMatches(
         [FromQuery] int page = 1,
@@ -48,6 +70,7 @@ public class MatchesController : ControllerBase
     {
         try
         {
+            // Validar parámetros de paginación
             var pagination = new PaginationRequest { Page = page, PageSize = pageSize };
             var paginationValidation = await _paginationValidator.ValidateAsync(pagination, cancellationToken);
 
@@ -60,6 +83,7 @@ public class MatchesController : ControllerBase
                 });
             }
 
+            // Construir objeto de filtros desde query parameters
             var filter = new MatchFilterRequest
             {
                 ChampionName = championName,
@@ -96,8 +120,18 @@ public class MatchesController : ControllerBase
     }
 
     /// <summary>
-    /// Get detailed information about a specific match
+    /// Obtiene detalles completos de una partida específica.
+    /// Incluye:
+    /// - Información general de la partida (duración, modo, versión)
+    /// - Todos los participantes agrupados por equipo
+    /// - Stats detalladas de cada jugador (K/D/A, damage, gold, CS, vision)
+    /// - Builds completas (items, runes, summoner spells)
     /// </summary>
+    /// <param name="matchId">ID de la partida (formato: REGION_MATCHID, ej: EUW1_123456)</param>
+    /// <param name="cancellationToken">Token de cancelación</param>
+    /// <response code="200">Detalles de la partida obtenidos</response>
+    /// <response code="404">Partida no encontrada</response>
+    /// <response code="500">Error interno</response>
     [HttpGet("{matchId}")]
     public async Task<IActionResult> GetMatchDetail(string matchId, CancellationToken cancellationToken)
     {

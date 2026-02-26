@@ -9,6 +9,13 @@ using System.Threading.Tasks;
 
 namespace DraftGapBackend.Infrastructure.Persistence;
 
+/// <summary>
+/// Repositorio para acceso a estadísticas de ranked.
+/// Responsabilidades:
+/// - Obtener stats de ranked por PUUID
+/// - Soportar múltiples queue types (Solo/Duo, Flex)
+/// Datos actualizados por el sistema de sync desde Riot API.
+/// </summary>
 public class RankedRepository : IRankedRepository
 {
     private readonly ApplicationDbContext _context;

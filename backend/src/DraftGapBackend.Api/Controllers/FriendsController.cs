@@ -7,7 +7,11 @@ using Microsoft.AspNetCore.Mvc;
 namespace DraftGapBackend.API.Controllers;
 
 /// <summary>
-/// User search and friends functionality
+/// Controlador para búsqueda de usuarios y sistema de amigos.
+/// Endpoints:
+/// - POST /api/friends/search: Buscar usuario por Riot ID
+/// Requiere autenticación: Sí (JWT Bearer token)
+/// Funcionalidad base para futura implementación de lista de amigos.
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
@@ -29,8 +33,25 @@ public class FriendsController : ControllerBase
     }
 
     /// <summary>
-    /// Search for a user by Riot ID
+    /// Busca un usuario registrado en la plataforma por su Riot ID.
+    /// Útil para:
+    /// - Comparar stats con otros jugadores
+    /// - Agregar amigos (futura funcionalidad)
+    /// - Verificar si un jugador está en la plataforma
     /// </summary>
+    /// <param name="request">Riot ID en formato GameName#TAG</param>
+    /// <param name="cancellationToken">Token de cancelación</param>
+    /// <returns>
+    /// Información pública del usuario:
+    /// - userId, riotId, region
+    /// - summonerName, level, profileIconId
+    /// - isActive
+    /// </returns>
+    /// <response code="200">Usuario encontrado</response>
+    /// <response code="400">Formato de Riot ID inválido</response>
+    /// <response code="404">Usuario no registrado en la plataforma</response>
+    /// <response code="401">Token inválido</response>
+    /// <response code="500">Error interno</response>
     [HttpPost("search")]
     public async Task<IActionResult> SearchUser([FromBody] SearchUserRequest request, CancellationToken cancellationToken)
     {

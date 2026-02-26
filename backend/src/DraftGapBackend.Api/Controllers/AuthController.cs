@@ -15,6 +15,16 @@ namespace DraftGapBackend.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+/// <summary>
+/// Controlador para autenticación y registro de usuarios.
+/// Endpoints:
+/// - POST /api/auth/register: Registro de nuevo usuario
+/// - POST /api/auth/login: Login con credenciales
+/// - POST /api/auth/refresh: Renovar tokens usando refresh token
+/// Sistema de autenticación basado en JWT:
+/// - accessToken: Expira en 1 hora, usado en Authorization header
+/// - refreshToken: Expira en 7 días, usado para renovar accessToken
+/// </summary>
 public class AuthController : ControllerBase
 {
     private readonly IUserService _userService;
@@ -37,6 +47,25 @@ public class AuthController : ControllerBase
         _context = context;
     }
 
+    /// <summary>
+    /// Registra un nuevo usuario en la plataforma.
+    /// Proceso:
+    /// 1. Valida email y password
+    /// 2. Verifica que el email no esté registrado
+    /// 3. Valida Riot ID contra Riot API
+    /// 4. Hashea password con BCrypt
+    /// 5. Crea usuario en BD
+    /// 6. Genera tokens JWT
+    /// </summary>
+    /// <param name="request">
+    /// - email: Email válido
+    /// - password: Mínimo 6 caracteres
+    /// - riotId: GameName#TAG
+    /// - region: platform ID (euw1, na1, etc.)
+    /// </param>
+    /// <response code="200">Usuario registrado exitosamente, retorna tokens</response>
+    /// <response code="400">Email ya existe o Riot ID inválido</response>
+    /// <response code="500">Error interno</response>
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequestDto request)
     {

@@ -6,7 +6,11 @@ using System.Security.Claims;
 namespace DraftGapBackend.API.Controllers;
 
 /// <summary>
-/// Ranked statistics endpoints
+/// Controlador para estadísticas de ranked.
+/// Endpoints:
+/// - GET /api/ranked: Stats de Solo/Duo y Flex queue
+/// Requiere autenticación: Sí (JWT Bearer token)
+/// Datos actualizados por el sistema de sync automático.
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
@@ -25,8 +29,20 @@ public class RankedController : ControllerBase
     }
 
     /// <summary>
-    /// Get current user's ranked statistics
+    /// Obtiene estadísticas de ranked del usuario autenticado.
+    /// Retorna stats separadas para:
+    /// - soloQueue: RANKED_SOLO_5x5 (Ranked Solo/Duo)
+    /// - flexQueue: RANKED_FLEX_SR (Ranked Flex 5v5)
+    /// Cada cola incluye: tier, rank, LP, wins, losses, winrate
     /// </summary>
+    /// <remarks>
+    /// Si el usuario no ha jugado ranked, ambas colas serán null.
+    /// Los datos se actualizan durante el proceso de sync.
+    /// </remarks>
+    /// <response code="200">Stats de ranked obtenidas</response>
+    /// <response code="404">Usuario sin datos de ranked (debe hacer sync primero)</response>
+    /// <response code="401">Token inválido</response>
+    /// <response code="500">Error interno</response>
     [HttpGet]
     public async Task<IActionResult> GetRankedStats(CancellationToken cancellationToken)
     {

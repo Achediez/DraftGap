@@ -7,7 +7,12 @@ using System.Security.Claims;
 namespace DraftGapBackend.API.Controllers;
 
 /// <summary>
-/// User-initiated sync operations
+/// Controlador para sincronizaciones iniciadas por el usuario.
+/// Endpoints:
+/// - POST /api/sync/trigger: Dispara sync manual
+/// - GET /api/sync/history: Historial de sincronizaciones
+/// Requiere autenticación: Sí (JWT Bearer token)
+/// Los jobs creados son procesados por RiotSyncBackgroundService.
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
@@ -26,8 +31,25 @@ public class SyncController : ControllerBase
     }
 
     /// <summary>
-    /// Trigger manual sync for current user
+    /// Dispara una sincronización manual de los datos del usuario.
+    /// Crea un SyncJob que será procesado en background.
+    /// El job actualizará:
+    /// - Ranked stats de Riot API
+    /// - Match history (nuevas partidas desde último sync)
+    /// Estado inicial: PENDING
     /// </summary>
+    /// <param name="request">Opciones de sync (forceRefresh para re-sincronizar todo)</param>
+    /// <param name="cancellationToken">Token de cancelación</param>
+    /// <remarks>
+    /// El proceso de sync puede tardar 10-30 segundos dependiendo de:
+    /// - Cantidad de partidas nuevas
+    /// - Rate limits de Riot API
+    /// Consulta /api/sync/history para ver el progreso.
+    /// </remarks>
+    /// <response code="200">Job de sync creado exitosamente</response>
+    /// <response code="400">Usuario sin Riot account vinculado</response>
+    /// <response code="401">Token inválido</response>
+    /// <response code="500">Error al crear job</response>
     [HttpPost("trigger")]
     public async Task<IActionResult> TriggerSync([FromBody] TriggerSyncRequest? request, CancellationToken cancellationToken)
     {

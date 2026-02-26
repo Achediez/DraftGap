@@ -9,6 +9,14 @@ using System.Threading.Tasks;
 
 namespace DraftGapBackend.Infrastructure.Persistence;
 
+/// <summary>
+/// Repositorio para operaciones de acceso a datos de matches.
+/// Responsabilidades:
+/// - Queries de partidas por usuario con paginación
+/// - Obtener detalles completos de partida con Include de participants
+/// - Contar total de matches para metadata de paginación
+/// Usa Entity Framework Core con navegación eager loading.
+/// </summary>
 public class MatchRepository : IMatchRepository
 {
     private readonly ApplicationDbContext _context;

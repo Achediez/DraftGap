@@ -11,6 +11,14 @@ using System.Threading.Tasks;
 
 namespace DraftGapBackend.Infrastructure.Services;
 
+/// <summary>
+/// Servicio para gestión de partidas y su historial.
+/// Responsabilidades:
+/// - Obtener historial de partidas del usuario con paginación
+/// - Aplicar filtros: champion, posición, resultado, fecha, queue
+/// - Obtener detalles completos de una partida específica
+/// - Calcular KDA y formatear datos para el cliente
+/// </summary>
 public class MatchService : IMatchService
 {
     private readonly IUserRepository _userRepository;
@@ -27,6 +35,15 @@ public class MatchService : IMatchService
         _logger = logger;
     }
 
+    /// <summary>
+    /// Obtiene historial de partidas paginado con filtros opcionales.
+    /// Implementa paginación eficiente con Skip/Take y filtrado en memoria.
+    /// </summary>
+    /// <param name="userId">ID del usuario autenticado</param>
+    /// <param name="pagination">Parámetros de paginación (page, pageSize)</param>
+    /// <param name="filter">Filtros opcionales (champion, position, win, queue)</param>
+    /// <param name="cancellationToken">Token de cancelación</param>
+    /// <returns>Resultado paginado con metadata (totalCount, totalPages, hasNext, etc.)</returns>
     public async Task<PaginatedResult<MatchListItemDto>> GetUserMatchesAsync(
         Guid userId,
         PaginationRequest pagination,
@@ -38,15 +55,19 @@ public class MatchService : IMatchService
             throw new InvalidOperationException("User not found or has no linked Riot account");
 
         var puuid = user.RiotPuuid;
+
+        // Calcular offset para paginación (page 1 = skip 0, page 2 = skip pageSize, etc.)
         var skip = (pagination.Page - 1) * pagination.PageSize;
 
-        // Get total count
+        // Obtener count total para metadata de paginación
         var totalCount = await _matchRepository.GetUserMatchCountAsync(puuid, cancellationToken);
 
-        // Get paginated participants
+        // Obtener participaciones paginadas del usuario
         var participants = await _matchRepository.GetUserMatchParticipantsAsync(puuid, skip, pagination.PageSize, cancellationToken);
 
-        // Apply filters if provided
+        // ===== APLICAR FILTROS =====
+        // Los filtros se aplican en memoria después de la paginación
+        // Para mejor rendimiento, considerar mover filtros a query SQL en el futuro
         var filteredList = participants.ToList();
         if (filter != null)
         {
@@ -87,6 +108,17 @@ public class MatchService : IMatchService
         };
     }
 
+    /// <summary>
+    /// Obtiene detalles completos de una partida específica.
+    /// Incluye todos los participantes agrupados por equipo con stats detalladas:
+    /// - Builds (items, runes, summoner spells)
+    /// - Estadísticas de combate (damage, vision, gold, CS)
+    /// - Resultado individual
+    /// </summary>
+    /// <param name="matchId">ID de la partida (ej: EUW1_123456)</param>
+    /// <param name="userId">ID del usuario solicitante (para validación)</param>
+    /// <param name="cancellationToken">Token de cancelación</param>
+    /// <returns>Detalles completos de la partida o null si no existe</returns>
     public async Task<MatchDetailDto?> GetMatchDetailAsync(string matchId, Guid userId, CancellationToken cancellationToken = default)
     {
         var match = await _matchRepository.GetByIdAsync(matchId, cancellationToken);

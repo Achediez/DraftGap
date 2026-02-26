@@ -11,6 +11,18 @@ namespace DraftGapBackend.API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize(Roles = "Admin")]
+/// <summary>
+/// Controlador para funciones administrativas del sistema.
+/// Endpoints:
+/// - GET /api/admin/users: Lista todos los usuarios
+/// - GET /api/admin/users/{id}: Detalles de un usuario
+/// - DELETE /api/admin/users/{id}: Elimina un usuario
+/// - POST /api/admin/sync: Dispara sync masivo
+/// - GET /api/admin/sync/status: Estado de jobs de sync
+/// - GET /api/admin/stats: Estadísticas del sistema
+/// Requiere autenticación: Sí (JWT Bearer token con rol Admin)
+/// Solo accesible para emails listados en Admin:AllowedEmails
+/// </summary>
 public class AdminController : ControllerBase
 {
     private readonly IDataSyncService _dataSyncService;
@@ -67,15 +79,33 @@ public class AdminController : ControllerBase
     }
 
     /// <summary>
-    /// Enqueues sync jobs for all active users or a specific subset via UserIds.
-    /// The background worker picks up PENDING jobs automatically.
+    /// Dispara sincronización masiva de usuarios.
+    /// Modos de operación:
+    /// 1. Sin userIds: Sincroniza TODOS los usuarios activos con PUUID
+    /// 2. Con userIds: Sincroniza solo usuarios especificados
+    /// Los jobs se crean con estado PENDING y son procesados por RiotSyncBackgroundService.
     /// </summary>
+    /// <param name="request">
+    /// - syncType: Tipo de sync (FULL_SYNC, INCREMENTAL)
+    /// - forceRefresh: Fuerza re-sincronización completa
+    /// - userIds: Lista opcional de usuarios a sincronizar
+    /// </param>
+    /// <param name="cancellationToken">Token de cancelación</param>
+    /// <remarks>
+    /// PRECAUCIÓN: Sincronizar muchos usuarios puede saturar rate limits de Riot API.
+    /// Recomendación: Sync masivos durante horas de bajo tráfico.
+    /// </remarks>
+    /// <response code="200">Jobs creados exitosamente</response>
+    /// <response code="400">Datos de usuario inconsistentes</response>
+    /// <response code="401">Token inválido o sin permisos</response>
+    /// <response code="500">Error al crear jobs</response>
     [HttpPost("sync")]
-    public async Task<IActionResult> TriggerSync([FromBody] SyncRequest request)
+    public async Task<IActionResult> TriggerSync([FromBody] AdminSyncRequest? request, CancellationToken cancellationToken)
     {
         try
         {
-            request ??= new SyncRequest();
+            // Valores por defecto si no se proporciona request body
+            request ??= new AdminSyncRequest();
 
             _logger.LogInformation(
                 "Admin triggered sync. SyncType={SyncType}, ForceRefresh={ForceRefresh}",

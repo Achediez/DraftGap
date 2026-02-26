@@ -7,6 +7,13 @@ using System.Threading.Tasks;
 
 namespace DraftGapBackend.Infrastructure.Persistence;
 
+/// <summary>
+/// Repositorio para acceso a datos de summoners/players.
+/// Responsabilidades:
+/// - Obtener datos de player por PUUID
+/// - Include de RankedStats relacionados
+/// Datos actualizados por el sistema de sync desde Riot API.
+/// </summary>
 public class PlayerRepository : IPlayerRepository
 {
     private readonly ApplicationDbContext _context;

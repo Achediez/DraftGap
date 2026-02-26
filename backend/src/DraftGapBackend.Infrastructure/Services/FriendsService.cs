@@ -8,6 +8,13 @@ using System.Threading.Tasks;
 
 namespace DraftGapBackend.Infrastructure.Services;
 
+/// <summary>
+/// Servicio para búsqueda de usuarios y funcionalidad de amigos.
+/// Responsabilidades:
+/// - Buscar usuarios registrados por Riot ID
+/// - Proveer información pública de summoner
+/// - Base para futura funcionalidad de sistema de amigos
+/// </summary>
 public class FriendsService : IFriendsService
 {
     private readonly IUserRepository _userRepository;
@@ -24,8 +31,19 @@ public class FriendsService : IFriendsService
         _logger = logger;
     }
 
+    /// <summary>
+    /// Busca un usuario en la base de datos por su Riot ID.
+    /// Útil para:
+    /// - Comparar stats con otros jugadores
+    /// - Agregar amigos (futura funcionalidad)
+    /// - Verificar si un jugador está registrado
+    /// </summary>
+    /// <param name="riotId">Riot ID en formato GameName#TAG</param>
+    /// <param name="cancellationToken">Token de cancelación</param>
+    /// <returns>Información del usuario o null si no está registrado</returns>
     public async Task<UserSearchResultDto?> SearchUserByRiotIdAsync(string riotId, CancellationToken cancellationToken = default)
     {
+        // Buscar en la tabla users por riot_id
         var user = await _userRepository.GetByRiotIdAsync(riotId);
         if (user == null)
             return null;

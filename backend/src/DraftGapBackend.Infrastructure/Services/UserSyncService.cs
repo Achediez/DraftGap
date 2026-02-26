@@ -11,6 +11,15 @@ using System.Threading.Tasks;
 
 namespace DraftGapBackend.Infrastructure.Services;
 
+/// <summary>
+/// Servicio para sincronizaciones iniciadas por el usuario.
+/// Responsabilidades:
+/// - Permitir que usuarios disparen sync manual de sus datos
+/// - Proveer historial de sincronizaciones (exitosas/fallidas)
+/// - Rastrear estado de jobs en tiempo real
+/// Diferencia con IDataSyncService: este es para operaciones de usuario final,
+/// mientras que IDataSyncService es para admin y background workers.
+/// </summary>
 public class UserSyncService : IUserSyncService
 {
     private readonly IUserRepository _userRepository;
@@ -30,6 +39,17 @@ public class UserSyncService : IUserSyncService
         _logger = logger;
     }
 
+    /// <summary>
+    /// Dispara una sincronización manual para el usuario autenticado.
+    /// Crea un SyncJob que será procesado por el RiotSyncBackgroundService.
+    /// El job actualizará:
+    /// - Ranked stats (Solo/Duo, Flex)
+    /// - Match history (nuevas partidas desde último sync)
+    /// </summary>
+    /// <param name="userId">ID del usuario</param>
+    /// <param name="request">Opciones de sync (forceRefresh, etc.)</param>
+    /// <param name="cancellationToken">Token de cancelación</param>
+    /// <returns>Job creado con estado PENDING</returns>
     public async Task<SyncJobDto> TriggerUserSyncAsync(Guid userId, TriggerSyncRequest request, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByIdAsync(userId);
@@ -51,6 +71,16 @@ public class UserSyncService : IUserSyncService
         };
     }
 
+    /// <summary>
+    /// Obtiene el historial completo de sincronizaciones del usuario.
+    /// Incluye:
+    /// - LastSync: Última vez que se actualizó exitosamente
+    /// - Contadores: total, exitosas, fallidas
+    /// - LatestJob: Último job con su estado actual
+    /// </summary>
+    /// <param name="userId">ID del usuario</param>
+    /// <param name="cancellationToken">Token de cancelación</param>
+    /// <returns>Historial de sincronizaciones</returns>
     public async Task<UserSyncHistoryDto> GetUserSyncHistoryAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByIdAsync(userId);

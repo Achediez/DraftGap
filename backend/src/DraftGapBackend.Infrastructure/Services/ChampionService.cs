@@ -12,6 +12,14 @@ using System.Threading.Tasks;
 
 namespace DraftGapBackend.Infrastructure.Services;
 
+/// <summary>
+/// Servicio para gestión de campeones y sus estadísticas.
+/// Responsabilidades:
+/// - Proveer datos estáticos de campeones (Data Dragon)
+/// - Calcular estadísticas de campeones por usuario
+/// - Agregar datos de rendimiento: games, winrate, KDA por champion
+/// Usa datos de: champions (estáticos) y match_participants (jugados)
+/// </summary>
 public class ChampionService : IChampionService
 {
     private readonly IChampionRepository _championRepository;
@@ -62,6 +70,17 @@ public class ChampionService : IChampionService
         };
     }
 
+    /// <summary>
+    /// Obtiene estadísticas de todos los campeones jugados por el usuario.
+    /// Proceso:
+    /// 1. Agrupa todas las participaciones por ChampionId
+    /// 2. Calcula totales: games, wins, K/D/A
+    /// 3. Combina con datos estáticos (imageUrl) de la tabla champions
+    /// 4. Ordena por cantidad de partidas jugadas (descendente)
+    /// </summary>
+    /// <param name="userId">ID del usuario</param>
+    /// <param name="cancellationToken">Token de cancelación</param>
+    /// <returns>Lista de estadísticas por campeón, ordenada por games played</returns>
     public async Task<List<ChampionStatsDto>> GetUserChampionStatsAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByIdAsync(userId);
@@ -70,6 +89,8 @@ public class ChampionService : IChampionService
 
         var puuid = user.RiotPuuid;
 
+        // Agregar todas las participaciones por champion
+        // GroupBy realiza la agregación en SQL para mejor rendimiento
         var championStats = await _context.MatchParticipants
             .Where(p => p.Puuid == puuid)
             .GroupBy(p => new { p.ChampionId, p.ChampionName })
@@ -85,9 +106,11 @@ public class ChampionService : IChampionService
             })
             .ToListAsync(cancellationToken);
 
+        // Cargar datos estáticos de campeones para obtener imageUrl
         var champions = await _championRepository.GetAllAsync(cancellationToken);
         var championDict = champions.ToDictionary(c => c.champion_id, c => c);
 
+        // Mapear a DTO con cálculos de winrate y KDA
         return championStats.Select(cs => new ChampionStatsDto
         {
             ChampionId = cs.ChampionId,

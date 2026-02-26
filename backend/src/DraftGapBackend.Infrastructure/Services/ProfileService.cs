@@ -9,6 +9,13 @@ using System.Threading.Tasks;
 
 namespace DraftGapBackend.Infrastructure.Services;
 
+/// <summary>
+/// Servicio para gestión del perfil de usuario.
+/// Responsabilidades:
+/// - Obtener información completa del perfil (User + Player/Summoner)
+/// - Actualizar Riot ID y región del usuario
+/// - Validar cambios con la API de Riot antes de persistir
+/// </summary>
 public class ProfileService : IProfileService
 {
     private readonly IUserRepository _userRepository;
@@ -28,14 +35,23 @@ public class ProfileService : IProfileService
         _logger = logger;
     }
 
+    /// <summary>
+    /// Obtiene el perfil completo del usuario incluyendo datos de summoner si está disponible.
+    /// Combina información de las tablas 'users' y 'players' para construir un perfil completo.
+    /// </summary>
+    /// <param name="userId">ID único del usuario en la base de datos</param>
+    /// <param name="cancellationToken">Token para cancelación de operación</param>
+    /// <returns>Perfil completo del usuario o null si no existe</returns>
     public async Task<ProfileDto?> GetProfileAsync(Guid userId, CancellationToken cancellationToken = default)
     {
+        // Buscar usuario en la base de datos
         var user = await _userRepository.GetByIdAsync(userId);
         if (user == null)
             return null;
 
         ProfileSummonerDto? summonerDto = null;
 
+        // Si el usuario tiene PUUID vinculado, obtener datos del summoner
         if (!string.IsNullOrEmpty(user.RiotPuuid))
         {
             var player = await _playerRepository.GetByPuuidAsync(user.RiotPuuid, cancellationToken);
@@ -64,20 +80,31 @@ public class ProfileService : IProfileService
         };
     }
 
+    /// <summary>
+    /// Actualiza el perfil del usuario (Riot ID y/o región).
+    /// Valida cambios con la API de Riot antes de persistir para garantizar que la cuenta existe.
+    /// </summary>
+    /// <param name="userId">ID del usuario a actualizar</param>
+    /// <param name="request">Datos de perfil a actualizar</param>
+    /// <param name="cancellationToken">Token para cancelación</param>
+    /// <returns>Perfil actualizado</returns>
+    /// <exception cref="InvalidOperationException">Si el usuario no existe o la cuenta de Riot no es válida</exception>
     public async Task<ProfileDto> UpdateProfileAsync(Guid userId, UpdateProfileRequest request, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByIdAsync(userId);
         if (user == null)
             throw new InvalidOperationException("User not found");
 
-        // Update Riot ID if provided
+        // Actualizar Riot ID si se proporciona y es diferente al actual
         if (!string.IsNullOrWhiteSpace(request.RiotId) && request.RiotId != user.RiotId)
         {
+            // Parsear Riot ID en GameName y TagLine
             var parts = request.RiotId.Split('#');
             if (parts.Length != 2)
                 throw new InvalidOperationException("Invalid Riot ID format");
 
-            // Verify Riot account exists
+            // Verificar que la cuenta de Riot existe consultando la API
+            // Esto previene que usuarios vinculen cuentas inexistentes
             var riotAccount = await _riotService.GetAccountByRiotIdAsync(parts[0], parts[1], request.Region ?? user.Region ?? "euw1");
             if (riotAccount == null)
                 throw new InvalidOperationException("Riot account not found");

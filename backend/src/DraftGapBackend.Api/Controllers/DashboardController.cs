@@ -6,7 +6,10 @@ using System.Security.Claims;
 namespace DraftGapBackend.API.Controllers;
 
 /// <summary>
-/// Dashboard summary and overview
+/// Controlador para el dashboard principal del usuario.
+/// Endpoints:
+/// - GET /api/dashboard/summary: Resumen completo (ranked, matches, performance, top champions)
+/// Requiere autenticación: Sí (JWT Bearer token)
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
@@ -25,8 +28,21 @@ public class DashboardController : ControllerBase
     }
 
     /// <summary>
-    /// Get dashboard summary with ranked stats, recent matches, and top champions
+    /// Obtiene resumen completo del dashboard del usuario.
+    /// Retorna:
+    /// - rankedOverview: Stats de Solo/Duo y Flex (tier, rank, LP, winrate)
+    /// - recentMatches: Últimas 10 partidas con resultado y KDA
+    /// - performanceStats: Promedios de K/D/A y winrate (basado en últimas 20 partidas)
+    /// - topChampions: Top 5 campeones más jugados (basado en últimas 50 partidas)
     /// </summary>
+    /// <remarks>
+    /// Este endpoint es el más usado en la aplicación.
+    /// Considera implementar caching para mejorar rendimiento.
+    /// </remarks>
+    /// <response code="200">Dashboard obtenido exitosamente</response>
+    /// <response code="400">Usuario sin cuenta de Riot vinculada</response>
+    /// <response code="401">Token inválido</response>
+    /// <response code="500">Error interno</response>
     [HttpGet("summary")]
     public async Task<IActionResult> GetDashboardSummary(CancellationToken cancellationToken)
     {

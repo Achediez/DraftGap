@@ -9,6 +9,14 @@ using System.Threading.Tasks;
 
 namespace DraftGapBackend.Infrastructure.Persistence;
 
+/// <summary>
+/// Repositorio para acceso a datos estáticos de campeones.
+/// Responsabilidades:
+/// - Proveer lista completa de campeones (para selects/filtros)
+/// - Buscar campeón por ID
+/// Datos sincronizados desde Data Dragon al iniciar la aplicación.
+/// Los datos raramente cambian (solo en patches).
+/// </summary>
 public class ChampionRepository : IChampionRepository
 {
     private readonly ApplicationDbContext _context;

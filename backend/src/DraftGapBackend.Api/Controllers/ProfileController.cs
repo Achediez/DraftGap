@@ -8,7 +8,11 @@ using System.Security.Claims;
 namespace DraftGapBackend.API.Controllers;
 
 /// <summary>
-/// User profile management endpoints
+/// Controlador para gestión del perfil de usuario.
+/// Endpoints:
+/// - GET /api/profile: Obtiene perfil completo del usuario autenticado
+/// - PUT /api/profile: Actualiza Riot ID y/o región
+/// Requiere autenticación: Sí (JWT Bearer token)
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
@@ -30,8 +34,16 @@ public class ProfileController : ControllerBase
     }
 
     /// <summary>
-    /// Get current user's profile
+    /// Obtiene el perfil completo del usuario autenticado.
+    /// Incluye:
+    /// - Datos de usuario (email, riotId, region, lastSync)
+    /// - Datos de summoner (name, level, profileIconId) si está vinculado
+    /// - Estado de admin (basado en claims del token)
     /// </summary>
+    /// <response code="200">Perfil obtenido exitosamente</response>
+    /// <response code="401">Token inválido o expirado</response>
+    /// <response code="404">Usuario no encontrado</response>
+    /// <response code="500">Error interno del servidor</response>
     [HttpGet]
     public async Task<IActionResult> GetProfile(CancellationToken cancellationToken)
     {

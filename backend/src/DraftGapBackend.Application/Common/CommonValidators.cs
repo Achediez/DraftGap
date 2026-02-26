@@ -2,6 +2,13 @@ using FluentValidation;
 
 namespace DraftGapBackend.Application.Common;
 
+/// <summary>
+/// Validador para parámetros de paginación.
+/// Reglas:
+/// - Page: >= 1 (primera página es 1, no 0)
+/// - PageSize: entre 1 y 100 (límite para prevenir queries muy pesadas)
+/// Usado en: GET /api/matches y otros endpoints paginados
+/// </summary>
 public class PaginationRequestValidator : AbstractValidator<PaginationRequest>
 {
     public PaginationRequestValidator()

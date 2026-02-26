@@ -9,6 +9,14 @@ using System.Threading.Tasks;
 
 namespace DraftGapBackend.Infrastructure.Services;
 
+/// <summary>
+/// Servicio para obtener estadísticas de ranked del usuario.
+/// Responsabilidades:
+/// - Proveer stats de Solo/Duo queue (RANKED_SOLO_5x5)
+/// - Proveer stats de Flex queue (RANKED_FLEX_SR)
+/// - Formatear datos: tier, rank, LP, wins, losses, winrate
+/// Datos provenientes de la tabla: player_ranked_stats
+/// </summary>
 public class RankedService : IRankedService
 {
     private readonly IUserRepository _userRepository;
@@ -25,6 +33,15 @@ public class RankedService : IRankedService
         _logger = logger;
     }
 
+    /// <summary>
+    /// Obtiene las estadísticas de ranked del usuario para ambas colas.
+    /// Busca específicamente:
+    /// - RANKED_SOLO_5x5: Cola competitiva individual/duo
+    /// - RANKED_FLEX_SR: Cola competitiva flex (grupos de 5)
+    /// </summary>
+    /// <param name="userId">ID del usuario</param>
+    /// <param name="cancellationToken">Token de cancelación</param>
+    /// <returns>Stats de ranked o null si el usuario no tiene PUUID vinculado</returns>
     public async Task<RankedStatsDto?> GetUserRankedStatsAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByIdAsync(userId);

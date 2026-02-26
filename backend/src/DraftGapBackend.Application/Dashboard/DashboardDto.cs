@@ -4,7 +4,14 @@ using System.Collections.Generic;
 namespace DraftGapBackend.Application.Dashboard;
 
 /// <summary>
-/// Dashboard summary with ranked stats and recent performance
+/// DTO del resumen completo del dashboard.
+/// Agrega datos de 4 fuentes:
+/// - rankedOverview: Stats de Solo/Duo y Flex
+/// - recentMatches: Últimas 10 partidas
+/// - performanceStats: Promedios K/D/A (últimas 20 partidas)
+/// - topChampions: Top 5 campeones más jugados (últimas 50 partidas)
+/// Usado en: GET /api/dashboard/summary
+/// Este es el endpoint más usado, considerar implementar caching.
 /// </summary>
 public class DashboardSummaryDto
 {
@@ -15,7 +22,9 @@ public class DashboardSummaryDto
 }
 
 /// <summary>
-/// Ranked overview with Solo/Duo and Flex queue stats
+/// Resumen de ranked para dashboard.
+/// Incluye stats separadas de Solo/Duo (RANKED_SOLO_5x5) y Flex (RANKED_FLEX_SR).
+/// Ambas pueden ser null si el usuario no ha jugado ranked.
 /// </summary>
 public class RankedOverviewDto
 {
@@ -24,7 +33,9 @@ public class RankedOverviewDto
 }
 
 /// <summary>
-/// Ranked queue information
+/// Estadísticas de una cola de ranked específica.
+/// Incluye: tier, rank, LP, wins, losses, winrate.
+/// Ejemplo: GOLD II, 67 LP, 15W - 10L (60% winrate)
 /// </summary>
 public class RankedQueueDto
 {
@@ -39,7 +50,9 @@ public class RankedQueueDto
 }
 
 /// <summary>
-/// Recent match summary
+/// DTO simplificado para partida reciente en dashboard.
+/// Solo incluye datos esenciales para renderizar la lista.
+/// Para detalles completos, navegar a /api/matches/{matchId}
 /// </summary>
 public class RecentMatchDto
 {
@@ -56,7 +69,12 @@ public class RecentMatchDto
 }
 
 /// <summary>
-/// Overall performance statistics
+/// Estadísticas agregadas de rendimiento del jugador.
+/// Calculadas sobre las últimas 20 partidas.
+/// - totalMatches, wins, losses: Contadores
+/// - winrate: Porcentaje de victorias
+/// - avgKills/Deaths/Assists: Promedios por partida
+/// - avgKDA: Fórmula (Kills + Assists) / Deaths
 /// </summary>
 public class PerformanceStatsDto
 {
@@ -71,7 +89,9 @@ public class PerformanceStatsDto
 }
 
 /// <summary>
-/// Top played champion statistics
+/// DTO de campeón más jugado para dashboard.
+/// Top 5 campeones basado en últimas 50 partidas.
+/// Incluye: games, wins, losses, winrate, avgKDA
 /// </summary>
 public class TopChampionDto
 {

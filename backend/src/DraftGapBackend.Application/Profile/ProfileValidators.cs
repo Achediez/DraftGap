@@ -3,6 +3,13 @@ using System.Linq;
 
 namespace DraftGapBackend.Application.Profile;
 
+/// <summary>
+/// Validador para actualización de perfil.
+/// Reglas:
+/// - riotId: formato correcto GameName#TAG, máximo 16 chars antes del #
+/// - region: debe ser un platform ID válido (euw1, na1, kr, etc.)
+/// Al menos un campo debe ser proporcionado para la actualización.
+/// </summary>
 public class UpdateProfileRequestValidator : AbstractValidator<UpdateProfileRequest>
 {
     public UpdateProfileRequestValidator()

@@ -3,6 +3,15 @@ using System.Linq;
 
 namespace DraftGapBackend.Application.Matches;
 
+/// <summary>
+/// Validador para filtros de partidas.
+/// Reglas:
+/// - championName: no vacío si se proporciona
+/// - teamPosition: debe ser uno de: TOP, JUNGLE, MIDDLE, BOTTOM, UTILITY
+/// - startDate: no puede ser en el futuro
+/// - endDate: debe ser posterior a startDate
+/// - queueId: >= 0 (0 significa todas las colas)
+/// </summary>
 public class MatchFilterRequestValidator : AbstractValidator<MatchFilterRequest>
 {
     public MatchFilterRequestValidator()

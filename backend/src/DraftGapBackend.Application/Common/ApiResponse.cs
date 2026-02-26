@@ -3,9 +3,18 @@ using System.Collections.Generic;
 namespace DraftGapBackend.Application.Common;
 
 /// <summary>
-/// Standard API response wrapper for consistent error handling
+/// Wrapper genérico para respuestas de API con manejo de errores consistente.
+/// Uso:
+/// - Success: true si la operación fue exitosa
+/// - Data: Payload de la respuesta
+/// - Error: Mensaje de error único
+/// - Errors: Lista de errores (validación múltiple)
+/// Factory methods:
+/// - SuccessResponse(data): Para operaciones exitosas
+/// - ErrorResponse(error): Para errores simples
+/// - ValidationErrorResponse(errors): Para errores de validación múltiples
 /// </summary>
-/// <typeparam name="T">Type of the response data</typeparam>
+/// <typeparam name="T">Tipo del payload de datos</typeparam>
 public class ApiResponse<T>
 {
     public bool Success { get; set; }
