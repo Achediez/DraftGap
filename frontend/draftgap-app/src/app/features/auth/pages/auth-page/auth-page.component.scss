@@ -32,12 +32,24 @@
   overflow: hidden;
 }
 
+.brand-header {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
 .brand-logo {
   width: 74px;
   height: 74px;
   object-fit: contain;
-  margin-bottom: 0.75rem;
   filter: drop-shadow(0 0 18px rgba(151, 71, 255, 0.42));
+}
+
+.brand-title {
+  font-size: 2.4rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #ebe5ff;
 }
 
 .brand-panel::after {
@@ -49,18 +61,6 @@
   border-radius: 50%;
   background: radial-gradient(circle, rgba(151, 71, 255, 0.36), transparent 70%);
   pointer-events: none;
-}
-
-.brand-kicker {
-  display: inline-flex;
-  padding: 0.36rem 0.7rem;
-  border-radius: 999px;
-  font-size: 0.76rem;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: #ebe5ff;
-  background: rgba(22, 22, 46, 0.8);
-  border: 1px solid rgba(151, 71, 255, 0.4);
 }
 
 .brand-panel h1 {
