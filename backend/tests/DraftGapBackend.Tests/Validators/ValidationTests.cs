@@ -1,7 +1,8 @@
-using DraftGapBackend.Application.Common;
-using DraftGapBackend.Application.Friends;
-using DraftGapBackend.Application.Matches;
-using DraftGapBackend.Application.Profile;
+using DraftGapBackend.Application.Dtos.Common;
+using DraftGapBackend.Application.Dtos.Friends;
+using DraftGapBackend.Application.Dtos.Matches;
+using DraftGapBackend.Application.Dtos.Profile;
+using DraftGapBackend.Application.Validators;
 using FluentValidation.TestHelper;
 
 namespace DraftGapBackend.Tests.Validators;

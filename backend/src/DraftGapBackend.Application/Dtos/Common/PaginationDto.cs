@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace DraftGapBackend.Application.Common;
+namespace DraftGapBackend.Application.Dtos.Common;
 
 /// <summary>
 /// Parámetros estándar de paginación para endpoints que retornan listas.

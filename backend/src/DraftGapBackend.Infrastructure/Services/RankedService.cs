@@ -1,5 +1,5 @@
 using DraftGapBackend.Application.Interfaces;
-using DraftGapBackend.Application.Ranked;
+using DraftGapBackend.Application.Dtos.Ranked;
 using DraftGapBackend.Domain.Abstractions;
 using Microsoft.Extensions.Logging;
 using System;

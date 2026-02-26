@@ -1,6 +1,6 @@
 using System;
 
-namespace DraftGapBackend.Application.Friends;
+namespace DraftGapBackend.Application.Dtos.Friends;
 
 /// <summary>
 /// Request to search for a user by Riot ID

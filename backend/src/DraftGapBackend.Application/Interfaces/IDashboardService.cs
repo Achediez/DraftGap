@@ -1,4 +1,4 @@
-using DraftGapBackend.Application.Dashboard;
+using DraftGapBackend.Application.Dtos.Dashboard;
 using System;
 using System.Threading;
 using System.Threading.Tasks;

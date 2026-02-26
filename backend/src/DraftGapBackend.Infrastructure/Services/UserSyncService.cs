@@ -1,5 +1,5 @@
 using DraftGapBackend.Application.Interfaces;
-using DraftGapBackend.Application.Sync;
+using DraftGapBackend.Application.Dtos.Sync;
 using DraftGapBackend.Domain.Abstractions;
 using DraftGapBackend.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;

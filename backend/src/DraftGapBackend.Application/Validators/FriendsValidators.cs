@@ -1,6 +1,7 @@
+using DraftGapBackend.Application.Dtos.Friends;
 using FluentValidation;
 
-namespace DraftGapBackend.Application.Friends;
+namespace DraftGapBackend.Application.Validators;
 
 /// <summary>
 /// Validador para búsqueda de usuario por Riot ID.

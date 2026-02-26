@@ -1,4 +1,4 @@
-using DraftGapBackend.Application.Profile;
+using DraftGapBackend.Application.Dtos.Profile;
 using System;
 using System.Threading;
 using System.Threading.Tasks;

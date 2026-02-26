@@ -1,6 +1,7 @@
+using DraftGapBackend.Application.Dtos.Common;
 using FluentValidation;
 
-namespace DraftGapBackend.Application.Common;
+namespace DraftGapBackend.Application.Validators;
 
 /// <summary>
 /// Validador para parámetros de paginación.

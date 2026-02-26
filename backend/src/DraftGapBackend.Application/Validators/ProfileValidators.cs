@@ -1,7 +1,8 @@
+using DraftGapBackend.Application.Dtos.Profile;
 using FluentValidation;
 using System.Linq;
 
-namespace DraftGapBackend.Application.Profile;
+namespace DraftGapBackend.Application.Validators;
 
 /// <summary>
 /// Validador para actualización de perfil.

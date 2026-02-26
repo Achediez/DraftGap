@@ -1,4 +1,4 @@
-using DraftGapBackend.Application.Champions;
+using DraftGapBackend.Application.Dtos.Champions;
 using DraftGapBackend.Application.Interfaces;
 using DraftGapBackend.Domain.Abstractions;
 using DraftGapBackend.Infrastructure.Data;

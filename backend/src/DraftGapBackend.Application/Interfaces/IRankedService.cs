@@ -1,4 +1,4 @@
-using DraftGapBackend.Application.Ranked;
+using DraftGapBackend.Application.Dtos.Ranked;
 using System;
 using System.Threading;
 using System.Threading.Tasks;

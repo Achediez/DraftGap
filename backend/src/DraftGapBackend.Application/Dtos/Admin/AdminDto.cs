@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace DraftGapBackend.Application.Admin;
+namespace DraftGapBackend.Application.Dtos.Admin;
 
 /// <summary>
 /// Admin user list item with sync state

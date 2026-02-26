@@ -1,6 +1,6 @@
 using System;
 
-namespace DraftGapBackend.Application.Ranked;
+namespace DraftGapBackend.Application.Dtos.Ranked;
 
 /// <summary>
 /// Ranked statistics for all queues

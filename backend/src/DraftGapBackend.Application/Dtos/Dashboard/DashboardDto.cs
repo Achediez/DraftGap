@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace DraftGapBackend.Application.Dashboard;
+namespace DraftGapBackend.Application.Dtos.Dashboard;
 
 /// <summary>
 /// DTO del resumen completo del dashboard.

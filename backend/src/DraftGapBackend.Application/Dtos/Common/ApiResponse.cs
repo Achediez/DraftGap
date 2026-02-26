@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace DraftGapBackend.Application.Common;
+namespace DraftGapBackend.Application.Dtos.Common;
 
 /// <summary>
 /// Wrapper genérico para respuestas de API con manejo de errores consistente.

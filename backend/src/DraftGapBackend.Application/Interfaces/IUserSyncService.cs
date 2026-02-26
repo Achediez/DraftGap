@@ -1,4 +1,4 @@
-using DraftGapBackend.Application.Sync;
+using DraftGapBackend.Application.Dtos.Sync;
 using System;
 using System.Threading;
 using System.Threading.Tasks;

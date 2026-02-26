@@ -1,6 +1,6 @@
 using System;
 
-namespace DraftGapBackend.Application.Profile;
+namespace DraftGapBackend.Application.Dtos.Profile;
 
 /// <summary>
 /// DTO de perfil de usuario completo.

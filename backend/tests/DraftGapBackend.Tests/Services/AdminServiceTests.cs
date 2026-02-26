@@ -1,4 +1,4 @@
-using DraftGapBackend.Application.Admin;
+using DraftGapBackend.Application.Dtos.Admin;
 using DraftGapBackend.Domain.Abstractions;
 using DraftGapBackend.Domain.Entities;
 using FluentAssertions;

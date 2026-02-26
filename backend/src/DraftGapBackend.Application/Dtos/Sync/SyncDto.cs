@@ -1,6 +1,6 @@
 using System;
 
-namespace DraftGapBackend.Application.Sync;
+namespace DraftGapBackend.Application.Dtos.Sync;
 
 /// <summary>
 /// Request to trigger manual sync for the authenticated user

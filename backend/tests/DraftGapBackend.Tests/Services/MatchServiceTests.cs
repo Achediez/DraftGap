@@ -1,6 +1,6 @@
-using DraftGapBackend.Application.Common;
+using DraftGapBackend.Application.Dtos.Common;
 using DraftGapBackend.Application.Interfaces;
-using DraftGapBackend.Application.Matches;
+using DraftGapBackend.Application.Dtos.Matches;
 using DraftGapBackend.Domain.Abstractions;
 using DraftGapBackend.Domain.Entities;
 using DraftGapBackend.Infrastructure.Services;

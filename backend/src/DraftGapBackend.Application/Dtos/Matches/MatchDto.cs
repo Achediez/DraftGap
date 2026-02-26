@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace DraftGapBackend.Application.Matches;
+namespace DraftGapBackend.Application.Dtos.Matches;
 
 /// <summary>
 /// Filtros opcionales para el historial de partidas.
@@ -30,8 +30,6 @@ public class MatchFilterRequest
 /// - Resultado por equipo (team100Won/team200Won)
 /// - Todos los participantes (10 jugadores) con stats completas
 /// Usado en: GET /api/matches/{matchId}
-/// </summary>
-public class MatchDetailDto
 /// </summary>
 public class MatchDetailDto
 {

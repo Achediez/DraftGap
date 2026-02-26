@@ -1,4 +1,4 @@
-using DraftGapBackend.Application.Dashboard;
+using DraftGapBackend.Application.Dtos.Dashboard;
 using DraftGapBackend.Application.Interfaces;
 using DraftGapBackend.Domain.Abstractions;
 using Microsoft.EntityFrameworkCore;

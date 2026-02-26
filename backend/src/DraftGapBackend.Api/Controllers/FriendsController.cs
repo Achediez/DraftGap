@@ -1,4 +1,4 @@
-using DraftGapBackend.Application.Friends;
+using DraftGapBackend.Application.Dtos.Friends;
 using DraftGapBackend.Application.Interfaces;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;

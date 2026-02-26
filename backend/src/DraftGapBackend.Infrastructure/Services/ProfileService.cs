@@ -1,5 +1,5 @@
 using DraftGapBackend.Application.Interfaces;
-using DraftGapBackend.Application.Profile;
+using DraftGapBackend.Application.Dtos.Profile;
 using DraftGapBackend.Domain.Abstractions;
 using DraftGapBackend.Infrastructure.Riot;
 using Microsoft.Extensions.Logging;

@@ -1,7 +1,8 @@
+using DraftGapBackend.Application.Dtos.Matches;
 using FluentValidation;
 using System.Linq;
 
-namespace DraftGapBackend.Application.Matches;
+namespace DraftGapBackend.Application.Validators;
 
 /// <summary>
 /// Validador para filtros de partidas.

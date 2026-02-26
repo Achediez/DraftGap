@@ -1,5 +1,5 @@
 using DraftGapBackend.Application.Interfaces;
-using DraftGapBackend.Application.Profile;
+using DraftGapBackend.Application.Dtos.Profile;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

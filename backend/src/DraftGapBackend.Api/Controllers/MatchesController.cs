@@ -1,6 +1,6 @@
-using DraftGapBackend.Application.Common;
+using DraftGapBackend.Application.Dtos.Common;
 using DraftGapBackend.Application.Interfaces;
-using DraftGapBackend.Application.Matches;
+using DraftGapBackend.Application.Dtos.Matches;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

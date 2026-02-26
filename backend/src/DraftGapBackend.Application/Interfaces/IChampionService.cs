@@ -1,5 +1,5 @@
-using DraftGapBackend.Application.Champions;
-using DraftGapBackend.Application.Common;
+using DraftGapBackend.Application.Dtos.Champions;
+using DraftGapBackend.Application.Dtos.Common;
 using System;
 using System.Collections.Generic;
 using System.Threading;

@@ -1,5 +1,5 @@
 using DraftGapBackend.Application.Interfaces;
-using DraftGapBackend.Application.Sync;
+using DraftGapBackend.Application.Dtos.Sync;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;

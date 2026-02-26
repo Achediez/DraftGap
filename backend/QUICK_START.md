@@ -1,5 +1,7 @@
 # 🚀 Guía Rápida de Comandos - DraftGap Backend
 
+> **📢 Nota:** La estructura de DTOs y Validadores ha sido reorganizada. Ver [REORGANIZATION.md](REORGANIZATION.md) para más detalles.
+
 ## 🏗️ Build & Ejecución
 
 ### Compilar la solución
@@ -247,29 +249,31 @@ backend/
 │   │   └── Program.cs                       ✅ UPDATED
 │   │
 │   ├── DraftGapBackend.Application/
-│   │   ├── Common/
-│   │   │   ├── PaginationDto.cs             ✅ NEW
-│   │   │   ├── ApiResponse.cs               ✅ NEW
-│   │   │   └── CommonValidators.cs          ✅ NEW
-│   │   ├── Profile/
-│   │   │   ├── ProfileDto.cs                ✅ NEW
-│   │   │   └── ProfileValidators.cs         ✅ NEW
-│   │   ├── Dashboard/
-│   │   │   └── DashboardDto.cs              ✅ NEW
-│   │   ├── Matches/
-│   │   │   ├── MatchDto.cs                  ✅ NEW
-│   │   │   └── MatchValidators.cs           ✅ NEW
-│   │   ├── Champions/
-│   │   │   └── ChampionDto.cs               ✅ NEW
-│   │   ├── Ranked/
-│   │   │   └── RankedDto.cs                 ✅ NEW
-│   │   ├── Friends/
-│   │   │   ├── FriendsDto.cs                ✅ NEW
-│   │   │   └── FriendsValidators.cs         ✅ NEW
-│   │   ├── Sync/
-│   │   │   └── SyncDto.cs                   ✅ NEW
-│   │   ├── Admin/
-│   │   │   └── AdminDto.cs                  ✅ NEW
+│   │   ├── Dtos/                            ✅ NEW (reorganizado)
+│   │   │   ├── Common/
+│   │   │   │   ├── PaginationDto.cs         ✅ DTOs comunes
+│   │   │   │   └── ApiResponse.cs
+│   │   │   ├── Profile/
+│   │   │   │   └── ProfileDto.cs            ✅ DTOs de perfil
+│   │   │   ├── Dashboard/
+│   │   │   │   └── DashboardDto.cs          ✅ DTOs de dashboard
+│   │   │   ├── Matches/
+│   │   │   │   └── MatchDto.cs              ✅ DTOs de partidas
+│   │   │   ├── Champions/
+│   │   │   │   └── ChampionDto.cs           ✅ DTOs de campeones
+│   │   │   ├── Ranked/
+│   │   │   │   └── RankedDto.cs             ✅ DTOs de ranked
+│   │   │   ├── Friends/
+│   │   │   │   └── FriendsDto.cs            ✅ DTOs de amigos
+│   │   │   ├── Sync/
+│   │   │   │   └── SyncDto.cs               ✅ DTOs de sync
+│   │   │   └── Admin/
+│   │   │       └── AdminDto.cs              ✅ DTOs de admin
+│   │   ├── Validators/                      ✅ NEW (centralizados)
+│   │   │   ├── CommonValidators.cs          ✅ Validadores comunes
+│   │   │   ├── ProfileValidators.cs         ✅ Validadores de perfil
+│   │   │   ├── MatchValidators.cs           ✅ Validadores de matches
+│   │   │   └── FriendsValidators.cs         ✅ Validadores de friends
 │   │   └── Interfaces/
 │   │       ├── IProfileService.cs           ✅ NEW
 │   │       ├── IDashboardService.cs         ✅ NEW

@@ -1,5 +1,5 @@
-using DraftGapBackend.Application.Common;
-using DraftGapBackend.Application.Matches;
+using DraftGapBackend.Application.Dtos.Common;
+using DraftGapBackend.Application.Dtos.Matches;
 using System;
 using System.Threading;
 using System.Threading.Tasks;

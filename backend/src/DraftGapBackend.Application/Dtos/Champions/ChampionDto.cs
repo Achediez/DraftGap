@@ -1,4 +1,4 @@
-namespace DraftGapBackend.Application.Champions;
+namespace DraftGapBackend.Application.Dtos.Champions;
 
 /// <summary>
 /// Champion static data
