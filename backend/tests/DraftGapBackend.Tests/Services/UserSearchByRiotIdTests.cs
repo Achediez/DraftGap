@@ -195,13 +195,13 @@ public class UserSearchByRiotIdTests
     }
 
     [Theory]
-    [InlineData("TestUser#EUW")]
-    [InlineData("testuser#euw")]
-    [InlineData("TESTUSER#EUW")]
-    public async Task GetUserDetailsByRiotId_CaseInsensitiveSearch_FindsUser(string searchRiotId)
+    [InlineData("TestUser#EUW", "TestUser#EUW")]
+    [InlineData("TestUser#EUW", "testuser#euw")]
+    [InlineData("TestUser#EUW", "TESTUSER#EUW")]
+    [InlineData("TestUser#EUW", "TeStUsEr#EuW")]
+    public async Task GetUserDetailsByRiotId_CaseInsensitiveSearch_FindsUser(string storedRiotId, string searchRiotId)
     {
-        // Arrange
-        var storedRiotId = "TestUser#EUW";
+        // Arrange: Usuario almacenado con RiotId específico
         var user = new User
         {
             UserId = Guid.NewGuid(),
@@ -212,9 +212,16 @@ public class UserSearchByRiotIdTests
             RiotPuuid = null
         };
 
-        // El repository debe hacer búsqueda case-insensitive
-        _mockUserRepo.Setup(r => r.GetByRiotIdAsync(It.IsAny<string>()))
-            .ReturnsAsync(user);
+        // Mock del repository que simula búsqueda case-insensitive real
+        // Si searchRiotId.ToLower() == storedRiotId.ToLower() -> encontrado
+        _mockUserRepo.Setup(r => r.GetByRiotIdAsync(searchRiotId))
+            .ReturnsAsync((string searchId) =>
+            {
+                // Simular comparación case-insensitive como lo haría la BD
+                return searchId.Equals(storedRiotId, StringComparison.OrdinalIgnoreCase)
+                    ? user
+                    : null;
+            });
 
         // Act
         var result = await _service.GetUserDetailsByRiotIdAsync(searchRiotId);
@@ -222,5 +229,6 @@ public class UserSearchByRiotIdTests
         // Assert
         Assert.NotNull(result);
         Assert.Equal(user.UserId, result.UserId);
+        Assert.Equal(storedRiotId, result.RiotId); // Devuelve el RiotId original almacenado
     }
 }

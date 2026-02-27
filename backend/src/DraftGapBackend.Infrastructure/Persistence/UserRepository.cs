@@ -32,7 +32,7 @@ public class UserRepository : IUserRepository
     public async Task<User?> GetByRiotIdAsync(string riotId)
     {
         return await _context.Users
-            .FirstOrDefaultAsync(u => u.RiotId == riotId);
+            .FirstOrDefaultAsync(u => u.RiotId != null && u.RiotId.ToLower() == riotId.ToLower());
     }
 
     public async Task<User?> GetByRiotPuuidAsync(string puuid)
