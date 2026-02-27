@@ -8,8 +8,9 @@
 5. [Champions](#champions)
 6. [Ranked](#ranked)
 7. [Friends](#friends)
-8. [Sync](#sync)
-9. [Admin](#admin)
+8. [Users - Búsqueda Pública](#users---búsqueda-pública)
+9. [Sync](#sync)
+10. [Admin](#admin)
 
 ---
 
@@ -410,6 +411,153 @@ Busca un usuario por su Riot ID.
 
 ---
 
+## 🔍 Users - Búsqueda Pública
+
+### GET `/api/users/by-riot-id/{riotId}`
+Busca un usuario por su Riot ID y devuelve un perfil agregado con datos públicos.
+
+**Descripción:**
+- Busca en la base de datos local (NO llama a Riot API)
+- Búsqueda case-insensitive
+- Devuelve datos agregados: perfil básico, summoner, ranked, partidas recientes, top champions
+- Ideal para comparar stats con otros jugadores o buscar amigos
+
+**Path Parameters:**
+- `riotId` (string, required): Riot ID en formato `GameName#TAG` (URL-encoded)
+  - Ejemplo: `Faker%23KR1` (Faker#KR1 URL-encoded)
+
+**Headers:** No requiere autenticación (endpoint público)
+
+**Validación:**
+- ✅ Debe contener exactamente un `#`
+- ✅ GameName no puede estar vacío
+- ✅ TagLine no puede estar vacío
+
+**Response (200) - Usuario encontrado con datos completos:**
+```json
+{
+  "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "email": "faker@t1.gg",
+  "riotId": "Faker#KR1",
+  "region": "kr",
+  "lastSync": "2026-02-27T18:00:00Z",
+  "summoner": {
+    "puuid": "test-puuid-faker",
+    "summonerName": "Faker",
+    "profileIconId": 5201,
+    "summonerLevel": 600
+  },
+  "rankedOverview": {
+    "soloQueue": {
+      "queueType": "RANKED_SOLO_5x5",
+      "tier": "CHALLENGER",
+      "rank": "I",
+      "leaguePoints": 1200,
+      "wins": 150,
+      "losses": 50,
+      "totalGames": 200,
+      "winrate": 75.0
+    },
+    "flexQueue": null
+  },
+  "recentMatches": [
+    {
+      "matchId": "KR_123456",
+      "gameCreation": 1709059200000,
+      "gameDuration": 1850,
+      "championName": "Azir",
+      "win": true,
+      "kills": 12,
+      "deaths": 2,
+      "assists": 15,
+      "kda": 13.5,
+      "teamPosition": "MIDDLE"
+    }
+  ],
+  "topChampions": [
+    {
+      "championId": 0,
+      "championName": "Azir",
+      "gamesPlayed": 45,
+      "wins": 30,
+      "winrate": 66.7,
+      "avgKda": 4.8
+    }
+  ]
+}
+```
+
+**Response (200) - Usuario sin datos secundarios:**
+```json
+{
+  "userId": "7fa85f64-5717-4562-b3fc-2c963f66afa7",
+  "email": "newuser@example.com",
+  "riotId": "NewUser#EUW",
+  "region": "euw1",
+  "lastSync": null,
+  "summoner": null,
+  "rankedOverview": null,
+  "recentMatches": [],
+  "topChampions": []
+}
+```
+
+**Response (400) - Formato inválido:**
+```json
+{
+  "error": "Invalid Riot ID format. Must be: GameName#TAG"
+}
+```
+
+**Response (400) - GameName vacío:**
+```json
+{
+  "error": "GameName cannot be empty"
+}
+```
+
+**Response (400) - TagLine vacío:**
+```json
+{
+  "error": "TagLine cannot be empty"
+}
+```
+
+**Response (404) - Usuario no encontrado:**
+```json
+{
+  "error": "User with Riot ID 'NonExistent#NA' not found in the platform"
+}
+```
+
+**Response (500) - Error interno:**
+```json
+{
+  "error": "An error occurred while retrieving user details"
+}
+```
+
+**Ejemplo cURL:**
+```bash
+# Buscar usuario Faker#KR1
+curl -X GET "http://localhost:5057/api/users/by-riot-id/Faker%23KR1" \
+  -H "Accept: application/json"
+
+# Buscar usuario con mayúsculas/minúsculas mixtas (case-insensitive)
+curl -X GET "http://localhost:5057/api/users/by-riot-id/faker%23kr1" \
+  -H "Accept: application/json"
+```
+
+**Notas:**
+- 🔓 **Endpoint público** (no requiere autenticación)
+- 🔍 **Búsqueda case-insensitive** (FAKER#KR1 = faker#kr1 = Faker#KR1)
+- 💾 **Solo base de datos local** (no consulta Riot API)
+- ⚡ **Datos agregados** de múltiples tablas (users, players, matches, ranked_stats)
+- 📊 **Arrays vacíos por defecto** (nunca null en arrays, solo en objetos opcionales)
+- 🛡️ **No expone datos sensibles** (sin password hash, sin tokens)
+
+---
+
 ## 🔄 Sync
 
 ### POST `/api/sync/trigger`
@@ -660,35 +808,40 @@ DraftGapBackend.Api/          # Controllers, Middleware
 │   ├── ChampionsController.cs
 │   ├── RankedController.cs
 │   ├── FriendsController.cs
+│   ├── UsersController.cs        ✨ NEW
 │   ├── SyncController.cs
 │   └── AdminController.cs
 └── Middleware/
     └── GlobalExceptionHandler.cs
 
 DraftGapBackend.Application/   # DTOs, Interfaces, Validators
-├── Common/
-│   ├── PaginationDto.cs
-│   ├── ApiResponse.cs
-│   └── CommonValidators.cs
-├── Profile/
-│   ├── ProfileDto.cs
-│   └── ProfileValidators.cs
-├── Dashboard/
-│   └── DashboardDto.cs
-├── Matches/
-│   ├── MatchDto.cs
-│   └── MatchValidators.cs
-├── Champions/
-│   └── ChampionDto.cs
-├── Ranked/
-│   └── RankedDto.cs
-├── Friends/
-│   ├── FriendsDto.cs
+├── Dtos/                      ✨ REORGANIZED
+│   ├── Common/
+│   │   ├── PaginationDto.cs
+│   │   └── ApiResponse.cs
+│   ├── Profile/
+│   │   └── ProfileDto.cs
+│   ├── Dashboard/
+│   │   └── DashboardDto.cs
+│   ├── Matches/
+│   │   └── MatchDto.cs
+│   ├── Champions/
+│   │   └── ChampionDto.cs
+│   ├── Ranked/
+│   │   └── RankedDto.cs
+│   ├── Friends/
+│   │   └── FriendsDto.cs
+│   ├── Users/                 ✨ NEW
+│   │   └── UserDetailsByRiotIdDto.cs
+│   ├── Sync/
+│   │   └── SyncDto.cs
+│   └── Admin/
+│       └── AdminDto.cs
+├── Validators/                ✨ CENTRALIZED
+│   ├── CommonValidators.cs
+│   ├── ProfileValidators.cs
+│   ├── MatchValidators.cs
 │   └── FriendsValidators.cs
-├── Sync/
-│   └── SyncDto.cs
-├── Admin/
-│   └── AdminDto.cs
 └── Interfaces/
     ├── IProfileService.cs
     ├── IDashboardService.cs
@@ -732,11 +885,13 @@ DraftGapBackend.Infrastructure/ # Implementations
 
 DraftGapBackend.Tests/         # Unit Tests
 ├── Controllers/
-│   └── AuthControllerTests.cs
+│   ├── AuthControllerTests.cs
+│   └── UsersControllerTests.cs    ✨ NEW
 ├── Services/
 │   ├── DashboardServiceTests.cs
 │   ├── MatchServiceTests.cs
-│   └── AdminServiceTests.cs
+│   ├── AdminServiceTests.cs
+│   └── UserSearchByRiotIdTests.cs ✨ NEW
 └── Validators/
     └── ValidationTests.cs
 ```
@@ -758,6 +913,9 @@ DraftGapBackend.Tests/         # Unit Tests
 - ✅ Tests básicos de controladores/servicios
 - ✅ CancellationToken en todos los endpoints
 - ✅ Arquitectura por capas limpia (Api/Application/Domain/Infrastructure)
+- ✅ Búsqueda pública de usuarios por Riot ID con datos agregados ✨ NEW
+- ✅ Estructura de DTOs reorganizada en carpetas por dominio ✨ NEW
+- ✅ Validadores centralizados en Application/Validators ✨ NEW
 
 ---
 
