@@ -947,6 +947,57 @@ DraftGapBackend.Tests/         # Unit Tests
 
 ## 📚 Recursos
 
+### Recursos Adicionales
+ - [FluentValidation Documentation](https://docs.fluentvalidation.net/)
+
+---
+
+## ⚙️ Riot API Integration & Retry Policy
+
+Esta sección documenta la integración con las APIs públicas de Riot y la política de reintentos
+implementada en la aplicación.
+
+### Comportamiento implementado
+- Se añadió un `DelegatingHandler` llamado `RetryAfterHandler` que gestiona reintentos automáticos
+  cuando la API responde con `429 Too Many Requests` o errores `5xx`.
+- El handler respeta la cabecera `Retry-After` si está presente. Si no, aplica un backoff
+  exponencial (2^attempt segundos) hasta un máximo de 3 reintentos por petición.
+
+### Registro en `Program.cs`
+El handler está registrado y enlazado al `HttpClient` usado por `IRiotService`:
+
+```csharp
+builder.Services.AddTransient<DraftGapBackend.Infrastructure.Riot.RetryAfterHandler>();
+builder.Services.AddHttpClient<IRiotService, RiotService>()
+    .AddHttpMessageHandler<DraftGapBackend.Infrastructure.Riot.RetryAfterHandler>();
+```
+
+### Configuración (appsettings / User Secrets)
+- `RiotApi:ApiKey` - API key provista por Riot (requerida).
+- `RiotApi:RegionalUrls:{region}` - URLs regionales (ej. `europe`) usadas para endpoints regionales.
+- `RiotApi:PlatformUrls:{platform}` - URLs por plataforma (ej. `euw1`) para endpoints de plataforma.
+
+Ejemplo:
+
+```json
+{
+  "RiotApi": {
+    "ApiKey": "<YOUR_KEY>",
+    "RegionalUrls": {
+      "europe": "https://europe.api.riotgames.com"
+    },
+    "PlatformUrls": {
+      "euw1": "https://euw1.api.riotgames.com"
+    }
+  }
+}
+```
+
+### Notas de Operación
+- Para entornos de producción se recomienda usar políticas más avanzadas (Polly) y un
+  almacenamiento centralizado (Redis) para tracking de límites y contador de peticiones.
+- Añadir tests de integración que simulen `429`/`5xx` para verificar el comportamiento del handler.
+
 - [Riot Games API Documentation](https://developer.riotgames.com/)
 - [Data Dragon CDN](https://ddragon.leagueoflegends.com/)
 - [FluentValidation Documentation](https://docs.fluentvalidation.net/)
