@@ -14,6 +14,9 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
 using System.Text;
+using System.Net;
+using Polly;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -148,10 +151,96 @@ builder.Services.AddScoped<IRankedRepository, RankedRepository>();
 builder.Services.AddScoped<IPlayerRepository, PlayerRepository>();
 
 // ===== RIOT API SERVICES =====
-// HttpClient with retry-on-429/5xx handler (uses Retry-After header when provided)
-builder.Services.AddTransient<DraftGapBackend.Infrastructure.Riot.RetryAfterHandler>();
+// Configure Redis connection multiplexer for rate-limit pre-checks
+builder.Services.AddSingleton(sp =>
+{
+    var cfg = builder.Configuration["Redis:ConnectionString"] ?? builder.Configuration.GetConnectionString("Redis") ?? "localhost";
+    return StackExchange.Redis.ConnectionMultiplexer.Connect(cfg);
+});
+
+// Register Redis-based pre-check handler
+builder.Services.AddTransient<DraftGapBackend.Infrastructure.Riot.RedisRateLimitHandler>();
+
+// Configure HttpClient for RiotService with resilience policies (Polly)
 builder.Services.AddHttpClient<IRiotService, RiotService>()
-    .AddHttpMessageHandler<DraftGapBackend.Infrastructure.Riot.RetryAfterHandler>();
+    .AddHttpMessageHandler<DraftGapBackend.Infrastructure.Riot.RedisRateLimitHandler>()
+    .AddPolicyHandler((sp, request) =>
+    {
+        var configuration = sp.GetRequiredService<IConfiguration>();
+        var logger = sp.GetRequiredService<ILogger<RiotService>>();
+
+        // Read options from configuration with sensible defaults
+        var retryCount = int.TryParse(configuration["Polly:RetryCount"], out var rc) ? rc : 3;
+        var timeoutSeconds = int.TryParse(configuration["Polly:TimeoutSeconds"], out var ts) ? ts : 10;
+        var failureThreshold = double.TryParse(configuration["Polly:FailureThreshold"], out var ft) ? ft : 0.3;
+        var samplingDuration = int.TryParse(configuration["Polly:SamplingDurationSeconds"], out var sd) ? sd : 30;
+        var minimumThroughput = int.TryParse(configuration["Polly:MinimumThroughput"], out var mt) ? mt : 8;
+        var breakDuration = int.TryParse(configuration["Polly:DurationOfBreakSeconds"], out var bd) ? bd : 30;
+
+        var jitterer = new Random();
+
+        // Retry policy: handle 429 and 5xx, read Retry-After when present, add jitter
+        var retryPolicy = Policy.HandleResult<HttpResponseMessage>(r => r.StatusCode == (HttpStatusCode)429 || (int)r.StatusCode >= 500)
+            .WaitAndRetryAsync(
+                retryCount,
+                attempt =>
+                {
+                    // Exponential backoff + jitter
+                    var delay = TimeSpan.FromSeconds(Math.Pow(2, attempt));
+                    var jitter = TimeSpan.FromMilliseconds(jitterer.Next(0, 1000));
+                    return delay + jitter;
+                },
+                async (outcome, timespan, retryAttempt, context) =>
+                {
+                    // If server provided Retry-After, wait additionally to honor it
+                    try
+                    {
+                        var resp = outcome.Result;
+                        if (resp != null && resp.Headers.RetryAfter != null)
+                        {
+                            TimeSpan additional = TimeSpan.Zero;
+                            if (resp.Headers.RetryAfter.Delta.HasValue)
+                                additional = resp.Headers.RetryAfter.Delta.Value;
+                            else if (resp.Headers.RetryAfter.Date.HasValue)
+                            {
+                                var computed = resp.Headers.RetryAfter.Date.Value - DateTimeOffset.UtcNow;
+                                if (computed > TimeSpan.Zero)
+                                    additional = computed;
+                            }
+
+                            if (additional > TimeSpan.Zero)
+                            {
+                                logger.LogWarning("Riot API requested Retry-After {RetryAfter}s. Waiting additional {Seconds}s.", additional.TotalSeconds, additional.TotalSeconds);
+                                await Task.Delay(additional).ConfigureAwait(false);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogWarning(ex, "Error while honoring Retry-After header");
+                    }
+
+                    logger.LogWarning("Riot API retry attempt {Attempt} due to {StatusCode}. Waiting {Delay}s.", retryAttempt, outcome.Result?.StatusCode, timespan.TotalSeconds);
+                });
+
+        // Circuit breaker: advanced threshold over a sampling duration
+        var breaker = Policy.HandleResult<HttpResponseMessage>(r => r.StatusCode == (HttpStatusCode)429 || (int)r.StatusCode >= 500)
+            .AdvancedCircuitBreakerAsync(
+                failureThreshold,
+                TimeSpan.FromSeconds(samplingDuration),
+                minimumThroughput,
+                TimeSpan.FromSeconds(breakDuration),
+                onBreak: (outcome, timespan) => logger.LogWarning("Circuit breaker opened for {Seconds}s due to {StatusCode}", timespan.TotalSeconds, outcome.Result?.StatusCode),
+                onReset: () => logger.LogInformation("Circuit breaker reset"),
+                onHalfOpen: () => logger.LogInformation("Circuit breaker half-open"));
+
+        var timeoutPolicy = Polly.Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(timeoutSeconds));
+
+        // Combine policies: timeout outside to bound total duration
+        var wrap = Polly.Policy.WrapAsync(timeoutPolicy, breaker, retryPolicy);
+        return wrap;
+    });
+
 builder.Services.AddScoped<IRiotService, RiotService>();
 
 // Data Dragon static data service
