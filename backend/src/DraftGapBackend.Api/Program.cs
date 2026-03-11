@@ -148,8 +148,10 @@ builder.Services.AddScoped<IRankedRepository, RankedRepository>();
 builder.Services.AddScoped<IPlayerRepository, PlayerRepository>();
 
 // ===== RIOT API SERVICES =====
-// HttpClient lifetime is managed automatically
-builder.Services.AddHttpClient<IRiotService, RiotService>();
+// HttpClient with retry-on-429/5xx handler (uses Retry-After header when provided)
+builder.Services.AddTransient<DraftGapBackend.Infrastructure.Riot.RetryAfterHandler>();
+builder.Services.AddHttpClient<IRiotService, RiotService>()
+    .AddHttpMessageHandler<DraftGapBackend.Infrastructure.Riot.RetryAfterHandler>();
 builder.Services.AddScoped<IRiotService, RiotService>();
 
 // Data Dragon static data service
