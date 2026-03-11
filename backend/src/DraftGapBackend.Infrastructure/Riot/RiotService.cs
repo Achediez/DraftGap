@@ -9,6 +9,11 @@ using System.Threading.Tasks;
 
 namespace DraftGapBackend.Infrastructure.Riot;
 
+/// <summary>
+/// Client service for interacting with Riot Games HTTP APIs.
+/// Encapsulates HTTP calls and mapping to DTOs used by the application.
+/// Uses configuration keys under <c>RiotApi</c> for API URLs and API key.
+/// </summary>
 public class RiotService : IRiotService
 {
     private readonly HttpClient _httpClient;
@@ -16,6 +21,12 @@ public class RiotService : IRiotService
     private readonly ILogger<RiotService> _logger;
     private readonly string _apiKey;
 
+    /// <summary>
+    /// Initializes a new instance of <see cref="RiotService"/>.
+    /// </summary>
+    /// <param name="httpClient">HttpClient provided by IHttpClientFactory.</param>
+    /// <param name="configuration">Application configuration.</param>
+    /// <param name="logger">Logger instance.</param>
     public RiotService(
         HttpClient httpClient,
         IConfiguration configuration,
@@ -27,6 +38,13 @@ public class RiotService : IRiotService
         _apiKey = configuration["RiotApi:ApiKey"] ?? throw new InvalidOperationException("Riot API key not configured");
     }
 
+    /// <summary>
+    /// Retrieves a Riot account by Riot ID (gameName and tagLine) using the regional account API.
+    /// </summary>
+    /// <param name="gameName">Game name portion of the Riot ID.</param>
+    /// <param name="tagLine">Tag line portion of the Riot ID.</param>
+    /// <param name="region">Regional key used to resolve the regional API base URL.</param>
+    /// <returns>RiotAccountDto when found; otherwise null.</returns>
     public async Task<RiotAccountDto?> GetAccountByRiotIdAsync(string gameName, string tagLine, string region = "europe")
     {
         var regionalUrl = _configuration[$"RiotApi:RegionalUrls:{region}"]
@@ -56,6 +74,12 @@ public class RiotService : IRiotService
         }
     }
 
+    /// <summary>
+    /// Retrieves summoner information by PUUID from the platform API.
+    /// </summary>
+    /// <param name="puuid">Player unique identifier (PUUID).</param>
+    /// <param name="platform">Platform key (e.g. "euw1").</param>
+    /// <returns>SummonerDto when found; otherwise null.</returns>
     public async Task<SummonerDto?> GetSummonerByPuuidAsync(string puuid, string platform = "euw1")
     {
         var platformUrl = _configuration[$"RiotApi:PlatformUrls:{platform}"]
@@ -85,6 +109,12 @@ public class RiotService : IRiotService
         }
     }
 
+    /// <summary>
+    /// Retrieves ranked stats for a player identified by PUUID. Internally resolves summoner id then calls league API.
+    /// </summary>
+    /// <param name="puuid">Player PUUID.</param>
+    /// <param name="platform">Platform key.</param>
+    /// <returns>List of ranked entries; empty list if none or on error.</returns>
     public async Task<List<RankedStatsDto>> GetRankedStatsByPuuidAsync(string puuid, string platform = "euw1")
     {
         var platformUrl = _configuration[$"RiotApi:PlatformUrls:{platform}"]
@@ -122,6 +152,13 @@ public class RiotService : IRiotService
         }
     }
 
+    /// <summary>
+    /// Retrieves recent match IDs for a player by PUUID via the regional match API.
+    /// </summary>
+    /// <param name="puuid">Player PUUID.</param>
+    /// <param name="region">Regional key used for the regional API base URL.</param>
+    /// <param name="count">Maximum number of match ids to retrieve.</param>
+    /// <returns>List of match id strings; empty list on error.</returns>
     public async Task<List<string>> GetMatchIdsByPuuidAsync(string puuid, string region = "europe", int count = 20)
     {
         var regionalUrl = _configuration[$"RiotApi:RegionalUrls:{region}"]
@@ -152,6 +189,12 @@ public class RiotService : IRiotService
         }
     }
 
+    /// <summary>
+    /// Retrieves a match by its id using the regional match API.
+    /// </summary>
+    /// <param name="matchId">Match identifier.</param>
+    /// <param name="region">Regional key.</param>
+    /// <returns>MatchDto when found; otherwise null.</returns>
     public async Task<MatchDto?> GetMatchByIdAsync(string matchId, string region = "europe")
     {
         var regionalUrl = _configuration[$"RiotApi:RegionalUrls:{region}"]
@@ -181,6 +224,11 @@ public class RiotService : IRiotService
         }
     }
 
+    /// <summary>
+    /// Returns a simple rate limit status. Currently an in-memory stub for diagnostics.
+    /// Replace with Redis-based tracking for production scenarios.
+    /// </summary>
+    /// <returns>RateLimitStatus with current limits and remaining counts.</returns>
     public Task<RateLimitStatus> GetRateLimitStatusAsync()
     {
         // Simple in-memory rate limit tracking
