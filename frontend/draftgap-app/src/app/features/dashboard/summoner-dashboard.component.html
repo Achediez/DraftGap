@@ -1,0 +1,209 @@
+<!--
+  @file Summoner Dashboard Template
+  @description Reactive template for displaying summoner statistics using new control flow (@if, @for).
+-->
+
+<div class="dashboard-container">
+  <!-- Header Section -->
+  <header class="dashboard-header">
+    <h1>League of Legends Statistics</h1>
+    <p class="subtitle">Search and view your ranked statistics</p>
+  </header>
+
+  <!-- Search Section -->
+  <section class="search-section">
+    <div class="search-input-group">
+      <input
+        type="text"
+        [(ngModel)]="searchRiotId"
+        placeholder="Enter Riot ID (gameName#tagLine)"
+        class="search-input"
+        (keyup.enter)="onSearch()"
+        [disabled]="isLoading()"
+      />
+      <button
+        (click)="onSearch()"
+        class="btn btn-primary"
+        [disabled]="!searchRiotId.trim() || isLoading()"
+      >
+        @if (isLoading()) {
+          <span>Loading...</span>
+        } @else {
+          <span>Search</span>
+        }
+      </button>
+      @if (currentSummoner()) {
+        <button (click)="onRefresh()" class="btn btn-secondary">
+          ↻ Refresh
+        </button>
+        <button (click)="onClear()" class="btn btn-outline">Clear</button>
+      }
+    </div>
+  </section>
+
+  <!-- Error State -->
+  @if (hasError() && !isRefreshing()) {
+    <div class="alert alert-error">
+      <h3>Error</h3>
+      <p>{{ getStateMessage() }}</p>
+    </div>
+  }
+
+  <!-- Loading State (Initial Load) -->
+  @if (isLoading() && !dashboard()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>{{ getStateMessage() }}</p>
+    </div>
+  }
+
+  <!-- Dashboard Content -->
+  @if (isDashboardReady()) {
+    <div class="dashboard-content">
+      <!-- Refreshing Indicator -->
+      @if (isRefreshing()) {
+        <div class="alert alert-info">
+          <p>{{ getStateMessage() }}</p>
+        </div>
+      }
+
+      <!-- Summoner Header -->
+      <div class="summoner-header">
+        <h2>{{ currentSummoner() }}</h2>
+        @if (dashboard()) {
+          <div class="summoner-info">
+            <span class="level">Level {{ dashboard()?.summonerInfo?.summonerLevel }}</span>
+          </div>
+        }
+      </div>
+
+      <!-- Ranked Statistics -->
+      @if (dashboard()?.rankedOverview) {
+        <section class="ranked-section">
+          <h3>Ranked Solo/Duo</h3>
+          <div class="ranked-stats">
+            <div class="stat-card">
+              <h4>Rank</h4>
+              <p class="rank">
+                {{ dashboard()?.rankedOverview.tier }}
+                {{ dashboard()?.rankedOverview.rank }}
+              </p>
+            </div>
+
+            <div class="stat-card">
+              <h4>LP</h4>
+              <p class="lp">{{ dashboard()?.rankedOverview.leaguePoints }} LP</p>
+            </div>
+
+            <div class="stat-card">
+              <h4>Record</h4>
+              <p class="record">
+                {{ dashboard()?.rankedOverview.wins }}W -
+                {{ dashboard()?.rankedOverview.losses }}L
+              </p>
+            </div>
+
+            <div class="stat-card">
+              <h4>Winrate</h4>
+              <p class="winrate">{{ formatWinrate() }}</p>
+            </div>
+          </div>
+        </section>
+      }
+
+      <!-- Derived Metrics -->
+      <section class="metrics-section">
+        <h3>Performance Metrics</h3>
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <span class="metric-label">KDA</span>
+            <span class="metric-value">{{ formatKDA() }}</span>
+            <span class="metric-subtext">Kills + Assists / Deaths</span>
+          </div>
+
+          <div class="metric-card">
+            <span class="metric-label">Trend</span>
+            <span class="metric-value">{{ getTrendIndicator() }}</span>
+            <span class="metric-subtext">Based on recent 5 games</span>
+          </div>
+
+          <div class="metric-card">
+            <span class="metric-label">LP/Game</span>
+            <span class="metric-value">
+              {{ (derivedMetrics().lpPerGame | number: '1.2-2') || '0.00' }}
+            </span>
+            <span class="metric-subtext">Average LP per game</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Recent Matches -->
+      @if (dashboard()?.recentMatches && dashboard()!.recentMatches!.length > 0) {
+        <section class="matches-section">
+          <h3>Recent Matches</h3>
+          <div class="matches-list">
+            @for (match of dashboard()?.recentMatches; track match.matchId) {
+              <div
+                class="match-card"
+                [ngClass]="{ victory: match.victory, defeat: !match.victory }"
+              >
+                <div class="match-result">
+                  @if (match.victory) {
+                    <span class="badge badge-win">WIN</span>
+                  } @else {
+                    <span class="badge badge-loss">LOSS</span>
+                  }
+                </div>
+
+                <div class="match-champion">
+                  <span class="champion-name">{{ match.champion }}</span>
+                </div>
+
+                <div class="match-performance">
+                  <span class="kda">
+                    {{ match.performanceStats?.kills }}/{{
+                      match.performanceStats?.deaths
+                    }}/{{ match.performanceStats?.assists }}
+                  </span>
+                  <span class="cs">
+                    CS: {{ match.performanceStats?.creepScore }}
+                  </span>
+                </div>
+
+                <div class="match-time">
+                  <span class="duration">{{ match.duration }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        </section>
+      }
+
+      <!-- Top Champions -->
+      @if (dashboard()?.topChampions && dashboard()!.topChampions!.length > 0) {
+        <section class="champions-section">
+          <h3>Top Champions</h3>
+          <div class="champions-grid">
+            @for (champion of dashboard()?.topChampions; track champion.name) {
+              <div class="champion-card">
+                <span class="champion-name">{{ champion.name }}</span>
+                <div class="champion-stats">
+                  <span>Games: {{ champion.gamesPlayed }}</span>
+                  <span>WR: {{ champion.winrate }}%</span>
+                </div>
+              </div>
+            }
+          </div>
+        </section>
+      }
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (!dashboard() && !isLoading() && !hasError()) {
+    <div class="empty-state">
+      <p>Search for a summoner to display their statistics</p>
+      <p class="hint">Example: SummonerName#NA1</p>
+    </div>
+  }
+</div>

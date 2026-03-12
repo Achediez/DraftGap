@@ -4,3 +4,5 @@
  */
 
 export * from './summoner.service';
+export * from './notification.service';
+
