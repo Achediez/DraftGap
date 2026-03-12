@@ -82,7 +82,7 @@ namespace DraftGapBackend.Tests.Integration
             });
 
             // Perform more failing calls to trip the breaker
-            // Since the handler always returns 503, after enough calls the breaker should open and throw BrokenCircuitException
+            // Since the handler always returns 503, after enough calls the breaker should open and throw BrokenCircuitException    
             // Execute until BrokenCircuitException is thrown
             var threw = false;
             for (int i = 0; i < 10; i++)
