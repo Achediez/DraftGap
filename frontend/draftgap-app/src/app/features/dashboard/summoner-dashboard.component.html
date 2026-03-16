@@ -70,36 +70,32 @@
       <!-- Summoner Header -->
       <div class="summoner-header">
         <h2>{{ currentSummoner() }}</h2>
-        @if (dashboard()) {
-          <div class="summoner-info">
-            <span class="level">Level {{ dashboard()?.summonerInfo?.summonerLevel }}</span>
-          </div>
-        }
+        <!-- NOTE: The API response does not include summoner level here; display current Riot ID only. -->
       </div>
 
       <!-- Ranked Statistics -->
-      @if (dashboard()?.rankedOverview) {
+      @if (dashboard()?.rankedOverview?.soloQueue) {
         <section class="ranked-section">
           <h3>Ranked Solo/Duo</h3>
           <div class="ranked-stats">
             <div class="stat-card">
               <h4>Rank</h4>
               <p class="rank">
-                {{ dashboard()?.rankedOverview.tier }}
-                {{ dashboard()?.rankedOverview.rank }}
+                {{ dashboard()?.rankedOverview?.soloQueue?.tier }}
+                {{ dashboard()?.rankedOverview?.soloQueue?.rank }}
               </p>
             </div>
 
             <div class="stat-card">
               <h4>LP</h4>
-              <p class="lp">{{ dashboard()?.rankedOverview.leaguePoints }} LP</p>
+              <p class="lp">{{ dashboard()?.rankedOverview?.soloQueue?.leaguePoints }} LP</p>
             </div>
 
             <div class="stat-card">
               <h4>Record</h4>
               <p class="record">
-                {{ dashboard()?.rankedOverview.wins }}W -
-                {{ dashboard()?.rankedOverview.losses }}L
+                {{ dashboard()?.rankedOverview?.soloQueue?.wins }}W -
+                {{ dashboard()?.rankedOverview?.soloQueue?.losses }}L
               </p>
             </div>
 
@@ -145,10 +141,10 @@
             @for (match of dashboard()?.recentMatches; track match.matchId) {
               <div
                 class="match-card"
-                [ngClass]="{ victory: match.victory, defeat: !match.victory }"
+                [ngClass]="{ victory: match.win, defeat: !match.win }"
               >
                 <div class="match-result">
-                  @if (match.victory) {
+                  @if (match.win) {
                     <span class="badge badge-win">WIN</span>
                   } @else {
                     <span class="badge badge-loss">LOSS</span>
@@ -156,22 +152,20 @@
                 </div>
 
                 <div class="match-champion">
-                  <span class="champion-name">{{ match.champion }}</span>
+                  <span class="champion-name">{{ match.championName }}</span>
                 </div>
 
                 <div class="match-performance">
                   <span class="kda">
-                    {{ match.performanceStats?.kills }}/{{
-                      match.performanceStats?.deaths
-                    }}/{{ match.performanceStats?.assists }}
+                    {{ match.kills }}/{{ match.deaths }}/{{ match.assists }}
                   </span>
                   <span class="cs">
-                    CS: {{ match.performanceStats?.creepScore }}
+                    CS: {{ match.teamPosition }}
                   </span>
                 </div>
 
                 <div class="match-time">
-                  <span class="duration">{{ match.duration }}</span>
+                  <span class="duration">{{ match.gameDuration }}</span>
                 </div>
               </div>
             }
@@ -184,9 +178,9 @@
         <section class="champions-section">
           <h3>Top Champions</h3>
           <div class="champions-grid">
-            @for (champion of dashboard()?.topChampions; track champion.name) {
+            @for (champion of dashboard()?.topChampions; track champion.championId) {
               <div class="champion-card">
-                <span class="champion-name">{{ champion.name }}</span>
+                <span class="champion-name">{{ champion.championName }}</span>
                 <div class="champion-stats">
                   <span>Games: {{ champion.gamesPlayed }}</span>
                   <span>WR: {{ champion.winrate }}%</span>

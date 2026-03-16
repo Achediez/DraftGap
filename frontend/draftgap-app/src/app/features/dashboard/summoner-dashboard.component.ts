@@ -7,7 +7,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { SummonerService } from '../../../core/services';
+import { SummonerService } from '../../core/services';
 
 /**
  * Dashboard component for displaying League of Legends summoner statistics.
@@ -122,8 +122,8 @@ export class SummonerDashboardComponent implements OnInit {
    * Get state message based on loading/error/ready states.
    */
   getStateMessage(): string {
-    const state = this.dashboard()?.dashboardState;
-    
+    const state = this.summonerService.dashboardState();
+
     if (this.isLoading() && !this.dashboard()) {
       return 'Loading summoner data...';
     }
@@ -131,7 +131,7 @@ export class SummonerDashboardComponent implements OnInit {
       return 'Refreshing data in background...';
     }
     if (this.hasError()) {
-      return `Error: ${this.dashboard()?.error || 'Unknown error'}`;
+      return `Error: ${state.error || 'Unknown error'}`;
     }
     return '';
   }
