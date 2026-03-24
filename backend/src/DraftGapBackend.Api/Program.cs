@@ -158,6 +158,8 @@ builder.Services.AddSingleton(sp =>
     return StackExchange.Redis.ConnectionMultiplexer.Connect(cfg);
 });
 
+
+
 // Register Redis-based pre-check handler
 builder.Services.AddTransient<DraftGapBackend.Infrastructure.Riot.RedisRateLimitHandler>();
 
@@ -268,6 +270,13 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader();
     });
 });
+
+// ====================================
+// Registro IConnectionMultiplexer
+// ====================================
+var redisConnection = builder.Configuration.GetConnectionString("Redis") ?? "localhost";
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+    ConnectionMultiplexer.Connect(redisConnection));
 
 // ====================================
 // BUILD APPLICATION
