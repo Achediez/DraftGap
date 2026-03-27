@@ -178,6 +178,9 @@ builder.Services.AddCors(options =>
     });
 });
 
+//Cache para reintentos de conexion
+builder.Services.AddMemoryCache();
+
 // ====================================
 // BUILD APPLICATION
 // ====================================

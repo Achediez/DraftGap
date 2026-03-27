@@ -31,12 +31,30 @@ namespace DraftGapBackend.Application.Users
             // Validación de email
             if (string.IsNullOrWhiteSpace(email))
                 errors.Add("El email es obligatorio.");
+            // Validación de email mejorada
             else if (!Regex.IsMatch(email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+            {
+                //asegura mejor la estructura usuario@dominio.extension
                 errors.Add("El email no es válido.");
+            }
 
-            // Validación de contraseña
-            if (string.IsNullOrWhiteSpace(password) || password.Length < 6)
-                errors.Add("La contraseña debe tener al menos 6 caracteres.");
+
+            if (string.IsNullOrWhiteSpace(password))
+            {
+                errors.Add("La contraseña es obligatoria.");
+            }
+            else
+            {
+                if (password.Length < 6)
+                    errors.Add("La contraseña debe tener al menos 6 caracteres.");
+
+                // Verifica al menos una mayúscula: (?=.*[A-Z])
+                // Verifica al menos un carácter especial: (?=.*[!@#$%^&*(),.?":{}|<>])
+                if (!Regex.IsMatch(password, @"^(?=.*[A-Z])(?=.*[!@#$%^&*(),.?"":{}|<>]).+$"))
+                {
+                    errors.Add("La contraseña debe contener al menos una mayúscula y un carácter especial.");
+                }
+            }
 
             return errors;
         }
